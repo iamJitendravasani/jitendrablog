@@ -50,11 +50,29 @@ header h1 {
 }
 
 .contact {
-    padding: 20px 0;
+    padding: 40px 0;
 }
 
 .contact h2 {
     margin-top: 0;
+    font-weight: 700;
+}
+
+.contact p {
+    margin: 5px 0;
+}
+
+.contact-link {
+    color: #007acc;
+    text-decoration: none;
+    font-weight: 700;
+    border-bottom: 2px solid transparent;
+    transition: border-bottom 0.3s, color 0.3s;
+}
+
+.contact-link:hover {
+    border-bottom: 2px solid #007acc;
+    color: #005f99;
 }
 
 footer {
