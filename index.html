@@ -1,41 +1,3530 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jitendra Vasani</title>
-    <link rel="stylesheet" href="styles.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Network Scripting Toolkit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23080c0f'/%3E%3Crect width='32' height='32' rx='6' fill='none' stroke='%2300d4ff' stroke-width='1.5'/%3E%3Ctext x='50%25' y='54%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial Black,sans-serif' font-weight='900' font-size='13' fill='%2300d4ff' letter-spacing='0.5'%3EJV%3C/text%3E%3C/svg%3E">
+<style>
+  :root {
+    --bg: #080c0f;
+    --surface: #0d1318;
+    --surface2: #111820;
+    --border: #1e2d3a;
+    --border2: #243344;
+    --accent: #00d4ff;
+    --accent2: #00ff88;
+    --accent3: #ff6b35;
+    --warn: #ffb347;
+    --danger: #ff4757;
+    --text: #c8dce8;
+    --text-dim: #5a7a8f;
+    --text-bright: #e8f4ff;
+    --output-bg: #060a0d;
+    --output-text: #00ff88;
+    --tag-cp: #00d4ff22;
+    --tag-cp-border: #00d4ff44;
+    --tag-cisco: #ff6b3522;
+    --tag-cisco-border: #ff6b3544;
+    --tag-tools: #a78bfa22;
+    --tag-tools-border: #a78bfa44;
+    --accent-tools: #a78bfa;
+    --tag-ui: #64748b22;
+    --tag-ui-border: #64748b44;
+    --accent-ui: #94a3b8;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,212,255,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,212,255,0.025) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ─── HEADER ─── */
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(8,12,15,0.96);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    height: 56px;
+  }
+  .logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 15px; letter-spacing: 0.08em; color: var(--text-bright); white-space: nowrap; }
+  .logo span { color: var(--accent); }
+  .header-sep { flex: 1; }
+  .header-badge { font-size: 10px; padding: 3px 8px; border-radius: 2px; background: var(--tag-cp); border: 1px solid var(--tag-cp-border); color: var(--accent); letter-spacing: 0.1em; text-transform: uppercase; }
+  .header-badge.cisco { background: var(--tag-cisco); border-color: var(--tag-cisco-border); color: var(--accent3); }
+  .header-author { font-size: 11px; color: var(--accent2); font-family: 'Syne', sans-serif; font-weight: 600; letter-spacing: 0.06em; }
+  .jv-logo { display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; flex-shrink: 0; }
+
+  /* ─── LAYOUT ─── */
+  .shell { display: flex; min-height: calc(100vh - 56px); position: relative; z-index: 1; }
+
+  /* ─── SIDEBAR ─── */
+  .sidebar {
+    width: 240px; flex-shrink: 0;
+    border-right: 1px solid var(--border);
+    background: var(--surface);
+    display: flex; flex-direction: column;
+    padding: 12px 0;
+    position: sticky; top: 56px;
+    height: calc(100vh - 56px);
+    overflow-y: auto;
+  }
+  .nav-section { padding: 0 10px 4px; }
+  .nav-label { font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-dim); padding: 10px 8px 5px; font-family: 'Syne', sans-serif; font-weight: 700; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 7px 10px; border-radius: 4px; cursor: pointer; transition: all 0.13s; color: var(--text-dim); border: 1px solid transparent; margin-bottom: 1px; font-size: 12px; user-select: none; }
+  .nav-item:hover { background: var(--surface2); color: var(--text); border-color: var(--border); }
+  .nav-item.active { background: var(--surface2); color: var(--accent); border-color: var(--border2); }
+  .nav-item.cisco.active  { color: var(--accent3); }
+  .nav-item.tools.active  { color: var(--accent-tools); }
+  .nav-item.ui.active     { color: var(--accent-ui); }
+  .nav-item.active .nav-dot { background: var(--accent); box-shadow: 0 0 5px var(--accent); }
+  .nav-item.cisco.active .nav-dot { background: var(--accent3);      box-shadow: 0 0 5px var(--accent3); }
+  .nav-item.tools.active .nav-dot { background: var(--accent-tools); box-shadow: 0 0 5px var(--accent-tools); }
+  .nav-item.ui.active    .nav-dot { background: var(--accent-ui);    box-shadow: 0 0 5px var(--accent-ui); }
+  .nav-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--border2); flex-shrink: 0; transition: all 0.13s; }
+
+  /* ─── MAIN ─── */
+  .main { flex: 1; overflow: auto; padding: 28px 32px; }
+  .page { display: none; animation: fadeIn 0.18s ease; }
+  .page.active { display: block; }
+  @keyframes fadeIn { from { opacity:0; transform: translateY(5px); } to { opacity:1; transform: translateY(0); } }
+
+  /* ─── PAGE HEADER ─── */
+  .page-header { margin-bottom: 22px; padding-bottom: 14px; border-bottom: 1px solid var(--border); display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+  .page-header-left {}
+  .page-title { font-family: 'Syne', sans-serif; font-size: 19px; font-weight: 700; color: var(--text-bright); margin-bottom: 4px; }
+  .page-desc { color: var(--text-dim); font-size: 12px; }
+  .page-desc code { color: var(--accent); background: rgba(0,212,255,0.1); padding: 1px 5px; border-radius: 2px; }
+
+  /* ─── CARDS ─── */
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 18px; margin-bottom: 14px; }
+  .card-title { font-family: 'Syne', sans-serif; font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .card-title.cisco { color: var(--accent3); }
+  .card-title.tools { color: var(--accent-tools); }
+  .card-title.green { color: var(--accent2); }
+  .card-count { font-size: 10px; background: var(--surface2); border: 1px solid var(--border2); padding: 1px 7px; border-radius: 10px; color: var(--text-dim); font-family: 'JetBrains Mono', monospace; font-weight: 400; letter-spacing: 0; }
+
+  /* ─── FORM ─── */
+  .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+  .form-grid-2 { grid-template-columns: 1fr 1fr; }
+  .form-grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .field { display: flex; flex-direction: column; gap: 4px; }
+  .field.full { grid-column: 1 / -1; }
+  label { font-size: 10px; letter-spacing: 0.07em; text-transform: uppercase; color: var(--text-dim); font-family: 'Syne', sans-serif; font-weight: 600; }
+  input[type=text], input[type=password], input[type=file], select, textarea {
+    background: var(--output-bg); border: 1px solid var(--border);
+    color: var(--text); padding: 7px 10px; border-radius: 3px;
+    font-family: 'JetBrains Mono', monospace; font-size: 12px;
+    outline: none; transition: border-color 0.13s, box-shadow 0.13s; width: 100%;
+  }
+  input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(0,212,255,0.08); }
+  input.invalid { border-color: var(--danger) !important; }
+  select { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%235a7a8f'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 28px; }
+  input[type=file] { cursor: pointer; padding: 6px 10px; }
+  input[readonly] { color: var(--text-dim); cursor: default; }
+
+  /* ─── BUTTONS ─── */
+  .btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; align-items: center; }
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 3px; border: 1px solid; cursor: pointer; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.04em; transition: all 0.13s; white-space: nowrap; background: transparent; }
+  .btn-primary { border-color: var(--accent); color: var(--accent); }
+  .btn-primary:hover { background: rgba(0,212,255,0.1); box-shadow: 0 0 10px rgba(0,212,255,0.15); }
+  .btn-success { border-color: var(--accent2); color: var(--accent2); }
+  .btn-success:hover { background: rgba(0,255,136,0.08); }
+  .btn-warn { border-color: var(--accent3); color: var(--accent3); }
+  .btn-warn:hover { background: rgba(255,107,53,0.08); }
+  .btn-ghost { border-color: var(--border2); color: var(--text-dim); }
+  .btn-ghost:hover { border-color: var(--text-dim); color: var(--text); }
+  .btn-danger { border-color: var(--danger); color: var(--danger); }
+  .btn-danger:hover { background: rgba(255,71,87,0.1); }
+  .btn-sm { padding: 4px 10px; font-size: 10px; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* ─── ENTRY BLOCKS ─── */
+  .entry-block { background: var(--output-bg); border: 1px solid var(--border); border-radius: 4px; padding: 12px; margin-bottom: 8px; position: relative; }
+  .entry-block:last-child { margin-bottom: 0; }
+  .entry-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .entry-num { font-size: 9px; letter-spacing: 0.1em; color: var(--text-dim); font-family: 'Syne', sans-serif; font-weight: 700; text-transform: uppercase; }
+  .entry-remove { background: none; border: none; color: var(--text-dim); cursor: pointer; font-size: 14px; line-height: 1; padding: 2px 5px; border-radius: 2px; transition: color 0.13s; }
+  .entry-remove:hover { color: var(--danger); }
+
+  /* ─── OUTPUT ─── */
+  .output-container { background: var(--output-bg); border: 1px solid var(--border); border-radius: 4px; margin-top: 14px; overflow: hidden; }
+  .output-header { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; border-bottom: 1px solid var(--border); background: var(--surface); }
+  .output-header-left { display: flex; align-items: center; gap: 10px; }
+  .output-dots { display: flex; gap: 5px; }
+  .output-dot { width: 8px; height: 8px; border-radius: 50%; }
+  .output-dot:nth-child(1) { background: #ff5f57; }
+  .output-dot:nth-child(2) { background: #ffbd2e; }
+  .output-dot:nth-child(3) { background: #28ca42; }
+  .output-title { font-size: 10px; color: var(--text-dim); letter-spacing: 0.08em; font-family: 'Syne', sans-serif; font-weight: 600; text-transform: uppercase; }
+  .output-line-count { font-size: 9px; color: var(--border2); font-family: 'JetBrains Mono', monospace; }
+  .output-body { padding: 14px 16px; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--output-text); white-space: pre-wrap; word-break: break-all; min-height: 48px; max-height: 400px; overflow-y: auto; line-height: 1.75; }
+  .output-body:empty::before { content: '// Output will appear here...'; color: var(--border2); font-style: italic; }
+  .output-body.cisco-color { color: var(--warn); }
+
+  /* ─── VALIDATION MESSAGE ─── */
+  .validation-msg { font-size: 11px; color: var(--danger); margin-top: 10px; padding: 8px 12px; background: rgba(255,71,87,0.07); border: 1px solid rgba(255,71,87,0.2); border-radius: 3px; display: none; }
+  .validation-msg.show { display: block; }
+
+  /* ─── TOAST ─── */
+  #toast { position: fixed; bottom: 24px; right: 24px; padding: 9px 18px; background: var(--surface2); border: 1px solid var(--accent2); color: var(--accent2); border-radius: 4px; font-size: 12px; z-index: 9999; opacity: 0; transform: translateY(8px); transition: all 0.18s; pointer-events: none; }
+  #toast.show { opacity: 1; transform: translateY(0); }
+  #toast.error { border-color: var(--danger); color: var(--danger); }
+
+  /* ─── HOME TILES ─── */
+  .home-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; margin-top: 6px; }
+  .home-tile { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 16px; cursor: pointer; transition: all 0.18s; position: relative; overflow: hidden; }
+  .home-tile::before { content: ''; position: absolute; inset: 0; opacity: 0; transition: opacity 0.18s; }
+  .home-tile.cp::before { background: radial-gradient(ellipse at top left, rgba(0,212,255,0.05), transparent 60%); }
+  .home-tile.cisco::before { background: radial-gradient(ellipse at top left, rgba(255,107,53,0.05), transparent 60%); }
+  .home-tile.tools::before { background: radial-gradient(ellipse at top left, rgba(167,139,250,0.05), transparent 60%); }
+  .home-tile.ui::before { background: radial-gradient(ellipse at top left, rgba(148,163,184,0.05), transparent 60%); }
+  .home-tile:hover { border-color: var(--border2); }
+  .home-tile.cp:hover { border-color: #00d4ff44; }
+  .home-tile.cp:hover::before { opacity: 1; }
+  .home-tile.cisco:hover { border-color: #ff6b3544; }
+  .home-tile.cisco:hover::before { opacity: 1; }
+  .home-tile.tools:hover { border-color: #a78bfa44; }
+  .home-tile.tools:hover::before { opacity: 1; }
+  .home-tile.ui:hover { border-color: #64748b44; }
+  .home-tile.ui:hover::before { opacity: 1; }
+  .tile-tag { font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; padding: 2px 7px; border-radius: 2px; display: inline-block; margin-bottom: 9px; font-family: 'Syne', sans-serif; font-weight: 600; }
+  .tile-tag.cp    { background: var(--tag-cp);    border: 1px solid var(--tag-cp-border);    color: var(--accent); }
+  .tile-tag.cisco { background: var(--tag-cisco); border: 1px solid var(--tag-cisco-border); color: var(--accent3); }
+  .tile-tag.tools { background: var(--tag-tools); border: 1px solid var(--tag-tools-border); color: var(--accent-tools); }
+  .tile-tag.ui    { background: var(--tag-ui);    border: 1px solid var(--tag-ui-border);    color: var(--accent-ui); }
+  .tile-name { font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700; color: var(--text-bright); margin-bottom: 5px; }
+  .tile-desc { font-size: 11px; color: var(--text-dim); line-height: 1.5; }
+
+  .section-title { font-family: 'Syne', sans-serif; font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); margin: 18px 0 10px; display: flex; align-items: center; gap: 8px; }
+  .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  /* ─── INFO BOX ─── */
+  .info-box { font-size: 11px; color: var(--text-dim); background: var(--surface2); border: 1px solid var(--border); border-radius: 3px; padding: 8px 12px; margin-bottom: 12px; line-height: 1.6; }
+  .info-box code { color: var(--accent); }
+
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+  @media (max-width: 768px) {
+    .sidebar { display: none; }
+    .main { padding: 16px; }
+    .form-grid-2, .form-grid-3 { grid-template-columns: 1fr; }
+  }
+</style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>Jitendra Vasani</h1>
-        </header>
-        <section class="profile">
-            <div class="info">
-                <h2>About Me</h2>
-                <p><strong>Profession:</strong> Network Security Engineer</p>
-                <p><strong>Interests:</strong> I love technology and have a passion for making digital spaces safer.</p>
-                <p><strong>Experience:</strong></p>
-                <ul>
-                    <li>Working with firewalls to protect networks from unauthorized access.</li>
-                    <li>Configuring and managing switches for efficient network communication.</li>
-                    <li>Deploying and maintaining wireless access points (AP) for seamless connectivity.</li>
-                    <li>Implementing SDWAN solutions for optimized network performance.</li>
-                    <li>Occasionally handling load balancers to distribute network traffic efficiently.</li>
-                </ul>
-            </div>
-            <img src="FullSizeRender.jpg" alt="Jitendra Vasani">
-        </section>
-        <section class="contact">
-            <h2>Contact</h2>
-            <p>Feel free to reach out to me for any professional inquiries or networking opportunities.</p>
-             <p><strong>Email:</strong> <a href="mailto:jitendra.vasani7@gmail.com">jitendra.vasani7@gmail.com</a></p>
-        <p><strong>LinkedIn:</strong> <a href="https://www.linkedin.com/in/jitendra-vasani-386246104" target="_blank">Jitendra Vasani</a></p>
-        </section>
-        <footer>
-            <p>"Technology is best when it brings people together."</p>
-        </footer>
+<div id="toast"></div>
+
+<header>
+  <div class="jv-logo">
+    <svg width="34" height="34" viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="34" height="34" rx="7" fill="#080c0f"/>
+      <rect x="0.75" y="0.75" width="32.5" height="32.5" rx="6.25" stroke="#00d4ff" stroke-width="1.5"/>
+      <!-- Glowing inner border -->
+      <rect x="2.5" y="2.5" width="29" height="29" rx="5" stroke="#00d4ff" stroke-width="0.4" stroke-opacity="0.25"/>
+      <!-- J letter -->
+      <path d="M10 10.5 H14.5 V21.5 C14.5 24.5 12.5 25.5 10 24.5" stroke="#00d4ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+      <!-- V letter -->
+      <path d="M17 10.5 L21 23.5 L25 10.5" stroke="#00d4ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+      <!-- Bottom glow line -->
+      <line x1="8" y1="30" x2="26" y2="30" stroke="#00d4ff" stroke-width="0.6" stroke-opacity="0.4"/>
+    </svg>
+  </div>
+  <div class="logo">NET<span>SCRIPT</span> TOOLKIT</div>
+  <div class="header-sep"></div>
+  <span class="header-badge">Checkpoint</span>
+  <span class="header-badge cisco">Cisco</span>
+  <span class="header-author">Jitendra Vasani</span>
+</header>
+
+<div class="shell">
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="nav-section">
+      <div class="nav-label">Home</div>
+      <div class="nav-item active" onclick="navigate('home')"><span class="nav-dot"></span>Dashboard</div>
     </div>
+    <div class="nav-section">
+      <div class="nav-label">Checkpoint · Objects</div>
+      <div class="nav-item" onclick="navigate('create_host')"><span class="nav-dot"></span>Create Host Objects</div>
+      <div class="nav-item" onclick="navigate('bulk_create_host')"><span class="nav-dot"></span>Bulk Create Hosts</div>
+      <div class="nav-item" onclick="navigate('create_network_objects')"><span class="nav-dot"></span>Network Objects</div>
+      <div class="nav-item" onclick="navigate('create_network_groups')"><span class="nav-dot"></span>Network Groups</div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Checkpoint · Gaia</div>
+      <div class="nav-item" onclick="navigate('gaia_interface')"><span class="nav-dot"></span>Gaia Interface</div>
+      <div class="nav-item" onclick="navigate('gaia_embedded_interface')"><span class="nav-dot"></span>Embedded Interface</div>
+      <div class="nav-item" onclick="navigate('simple_gateway')"><span class="nav-dot"></span>Single Gateway</div>
+      <div class="nav-item" onclick="navigate('cluster_gateway')"><span class="nav-dot"></span>Cluster Gateway</div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Checkpoint · Config</div>
+      <div class="nav-item" onclick="navigate('autoconfig')"><span class="nav-dot"></span>Autoconfig File</div>
+      <div class="nav-item" onclick="navigate('ftw')"><span class="nav-dot"></span>FTW Config</div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Cisco</div>
+      <div class="nav-item cisco" onclick="navigate('cisco_switch')"><span class="nav-dot"></span>Switch Config</div>
+      <div class="nav-item cisco" onclick="navigate('cisco_acl')"><span class="nav-dot"></span>ACL Builder</div>
+      <div class="nav-item cisco" onclick="navigate('cisco_hsrp')"><span class="nav-dot"></span>HSRP / VRRP</div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Network Tools</div>
+      <div class="nav-item tools" onclick="navigate('subnet_calc')"><span class="nav-dot"></span>Subnet Calculator</div>
+      <div class="nav-item tools" onclick="navigate('ip_planner')"><span class="nav-dot"></span>IP / VLAN Planner</div>
+      <div class="nav-item tools" onclick="navigate('pass_gen')"><span class="nav-dot"></span>Password Generator</div>
+      <div class="nav-item tools" onclick="navigate('pass_hash')"><span class="nav-dot"></span>OpenSSL Hash</div>
+      <div class="nav-item tools" onclick="navigate('wildcard')"><span class="nav-dot"></span>Wildcard Converter</div>
+      <div class="nav-item tools" onclick="navigate('ip_range')"><span class="nav-dot"></span>IP Range Expander</div>
+      <div class="nav-item tools" onclick="navigate('nat_builder')"><span class="nav-dot"></span>NAT Rule Builder</div>
+      <div class="nav-item tools" onclick="navigate('sic_reset')"><span class="nav-dot"></span>SIC Reset</div>
+      <div class="nav-item tools" onclick="navigate('change_request')"><span class="nav-dot"></span>Change Request</div>
+      <div class="nav-item ui" onclick="navigate('theme_toggle')" id="nav-theme" style="margin-top:8px;border-top:1px solid var(--border);padding-top:8px;"><span class="nav-dot"></span>🌙 Dark Mode</div>
+    </div>
+  </nav>
+
+  <main class="main">
+
+    <!-- HOME -->
+    <div id="page-home" class="page active">
+      <div class="page-header">
+        <div class="page-header-left">
+          <div class="page-title">Network Scripting Toolkit</div>
+          <div class="page-desc">Generate configuration scripts for Checkpoint Firewall and Cisco devices.</div>
+        </div>
+      </div>
+      <div class="section-title">Checkpoint · Object Tools</div>
+      <div class="home-grid">
+        <div class="home-tile cp" onclick="navigate('create_host')"><span class="tile-tag cp">Checkpoint</span><div class="tile-name">Create Host Objects</div><div class="tile-desc">Generate <code style="color:var(--accent)">add host</code> commands with site code, zone, and IP.</div></div>
+        <div class="home-tile cp" onclick="navigate('bulk_create_host')"><span class="tile-tag cp">Checkpoint</span><div class="tile-name">Bulk Create Hosts</div><div class="tile-desc">Import from CSV or manually add multiple host entries at once.</div></div>
+        <div class="home-tile cp" onclick="navigate('create_network_objects')"><span class="tile-tag cp">Checkpoint</span><div class="tile-name">Network Objects</div><div class="tile-desc">Generate <code style="color:var(--accent)">add network</code> commands for subnets with VLAN naming.</div></div>
+        <div class="home-tile cp" onclick="navigate('create_network_groups')"><span class="tile-tag cp">Checkpoint</span><div class="tile-name">Network Groups</div><div class="tile-desc">Build <code style="color:var(--accent)">add group</code> commands with multiple member objects.</div></div>
+      </div>
+      <div class="section-title" style="margin-top:22px;">Checkpoint · Gaia Configuration</div>
+      <div class="home-grid">
+        <div class="home-tile cp" onclick="navigate('gaia_interface')"><span class="tile-tag cp">Gaia</span><div class="tile-name">Gaia Interface</div><div class="tile-desc">Generate VLAN sub-interface configuration commands.</div></div>
+        <div class="home-tile cp" onclick="navigate('gaia_embedded_interface')"><span class="tile-tag cp">Gaia</span><div class="tile-name">Embedded Interface</div><div class="tile-desc">Embedded Gaia interfaces using <code style="color:var(--accent)">description</code> key.</div></div>
+        <div class="home-tile cp" onclick="navigate('simple_gateway')"><span class="tile-tag cp">Gaia</span><div class="tile-name">Single Gateway</div><div class="tile-desc">Full <code style="color:var(--accent)">add simple-gateway</code> with blades and interfaces.</div></div>
+        <div class="home-tile cp" onclick="navigate('cluster_gateway')"><span class="tile-tag cp">Gaia</span><div class="tile-name">Cluster Gateway</div><div class="tile-desc">Two-member ClusterXL HA with per-member interface IPs.</div></div>
+        <div class="home-tile cp" onclick="navigate('autoconfig')"><span class="tile-tag cp">Gaia</span><div class="tile-name">Autoconfig File</div><div class="tile-desc">Full autoconfig .cfg with bonding, routes, DHCP, hardening.</div></div>
+        <div class="home-tile cp" onclick="navigate('ftw')"><span class="tile-tag cp">Gaia</span><div class="tile-name">FTW Config</div><div class="tile-desc">First Time Wizard configuration file for initial setup.</div></div>
+      </div>
+      <div class="section-title" style="margin-top:22px;">Cisco</div>
+      <div class="home-grid">
+        <div class="home-tile cisco" onclick="navigate('cisco_switch')"><span class="tile-tag cisco">Cisco</span><div class="tile-name">Switch Config Generator</div><div class="tile-desc">Full IOS switch config with VLANs, SSH, spanning-tree, trunk and port-channel.</div></div>
+        <div class="home-tile cisco" onclick="navigate('cisco_acl')"><span class="tile-tag cisco">Cisco</span><div class="tile-name">ACL Builder</div><div class="tile-desc">Build standard and extended ACLs with permit/deny rules, wildcard masks and remarks.</div></div>
+        <div class="home-tile cisco" onclick="navigate('cisco_hsrp')"><span class="tile-tag cisco">Cisco</span><div class="tile-name">HSRP / VRRP Config</div><div class="tile-desc">Generate first-hop redundancy configs for active/standby gateway pairs.</div></div>
+      </div>
+      <div class="section-title" style="margin-top:22px;">Network Tools</div>
+      <div class="home-grid">
+        <div class="home-tile tools" onclick="navigate('subnet_calc')"><span class="tile-tag tools">Tools</span><div class="tile-name">Subnet Calculator</div><div class="tile-desc">CIDR to subnet mask, usable hosts, network & broadcast address with live output.</div></div>
+        <div class="home-tile tools" onclick="navigate('ip_planner')"><span class="tile-tag tools">Tools</span><div class="tile-name">IP / VLAN Planner</div><div class="tile-desc">Enter VLAN count & hosts per VLAN — auto-generates supernet and per-VLAN subnets with live editing.</div></div>
+        <div class="home-tile tools" onclick="navigate('pass_gen')"><span class="tile-tag tools">Tools</span><div class="tile-name">Password Generator</div><div class="tile-desc">Generate complex passwords with custom length, character sets, and strength indicator.</div></div>
+        <div class="home-tile tools" onclick="navigate('pass_hash')"><span class="tile-tag tools">Tools</span><div class="tile-name">OpenSSL Hash</div><div class="tile-desc">Generate crypt-format hashes matching <code style="color:var(--accent-tools)">openssl passwd -1/-5/-6</code> with MD5, SHA-256, SHA-512.</div></div>
+        <div class="home-tile tools" onclick="navigate('wildcard')"><span class="tile-tag tools">Tools</span><div class="tile-name">Wildcard Converter</div><div class="tile-desc">Instantly convert subnet masks ↔ wildcard masks. Essential for ACL and firewall rule building.</div></div>
+        <div class="home-tile tools" onclick="navigate('ip_range')"><span class="tile-tag tools">Tools</span><div class="tile-name">IP Range Expander</div><div class="tile-desc">Enter a range like <code style="color:var(--accent-tools)">10.0.0.1–10.0.0.50</code> and get every IP listed, ready for bulk object creation.</div></div>
+        <div class="home-tile cp" onclick="navigate('nat_builder')"><span class="tile-tag cp">Checkpoint</span><div class="tile-name">NAT Rule Builder</div><div class="tile-desc">Generate <code style="color:var(--accent)">add nat-rule</code> commands for hide NAT and static NAT policies.</div></div>
+        <div class="home-tile cp" onclick="navigate('sic_reset')"><span class="tile-tag cp">Checkpoint</span><div class="tile-name">SIC Reset</div><div class="tile-desc">Generate SIC reset and re-initialise commands for gateways and management servers.</div></div>
+        <div class="home-tile tools" onclick="navigate('change_request')"><span class="tile-tag tools">Tools</span><div class="tile-name">Change Request Template</div><div class="tile-desc">Fill in a structured network change request and export it as plain text or copy to clipboard.</div></div>
+        <div class="home-tile ui" onclick="toggleTheme()" style="cursor:pointer;"><span class="tile-tag ui">UI</span><div class="tile-name" id="theme-tile-label">🌙 Switch to Light Mode</div><div class="tile-desc">Toggle between dark and light themes for comfortable viewing.</div></div>
+      </div>
+    </div>
+
+    <!-- CREATE HOST -->
+    <div id="page-create_host" class="page">
+      <div class="page-header">
+        <div class="page-header-left">
+          <div class="page-title">Create Host Objects</div>
+          <div class="page-desc">Generate <code>add host</code> commands for Checkpoint SmartConsole.</div>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="clearEntries('host-entries'); addHostEntry()">✕ Clear All</button>
+      </div>
+      <div class="card">
+        <div class="card-title">Host Entries <span class="card-count" id="host-count">0</span></div>
+        <div id="host-entries"></div>
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="addHostEntry()">+ Add Entry</button>
+        </div>
+      </div>
+      <div class="validation-msg" id="host-validation"></div>
+      <div class="btn-row">
+        <button class="btn btn-success" onclick="generateHostOutput()">▶ Generate Commands</button>
+        <button class="btn btn-primary" onclick="downloadOutput('host-output','checkpoint_host_objects.txt')">↓ Download</button>
+        <button class="btn btn-ghost" onclick="copyOutput('host-output')">⎘ Copy</button>
+      </div>
+      <div class="output-container" id="host-output-container">
+        <div class="output-header">
+          <div class="output-header-left"><div class="output-dots"><div class="output-dot"></div><div class="output-dot"></div><div class="output-dot"></div></div><span class="output-title">Generated Commands</span></div>
+          <span class="output-line-count" id="host-linecount"></span>
+        </div>
+        <div class="output-body" id="host-output"></div>
+      </div>
+    </div>
+
+    <!-- BULK CREATE HOST -->
+    <div id="page-bulk_create_host" class="page">
+      <div class="page-header">
+        <div class="page-header-left">
+          <div class="page-title">Bulk Create Host Objects</div>
+          <div class="page-desc">Import from CSV or add entries manually.</div>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="clearEntries('bulk-host-entries')">✕ Clear All</button>
+      </div>
+      <div class="card">
+        <div class="card-title">Import CSV</div>
+        <div class="info-box">Expected columns: <code>SiteCode, Zone, Hostname, IPAddress, Color</code> — first row is treated as a header and skipped.</div>
+        <div class="field">
+          <label>CSV or TXT File</label>
+          <input type="file" accept=".csv,.txt" onchange="handleBulkCSV(event)">
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Host Entries <span class="card-count" id="bulk-host-count">0</span></div>
+        <div id="bulk-host-entries"></div>
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="addBulkHostEntry()">+ Add Entry</button>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-success" onclick="generateBulkHostOutput()">▶ Generate Commands</button>
+        <button class="btn btn-primary" onclick="downloadOutput('bulk-host-output','checkpoint_host_objects.txt')">↓ Download</button>
+        <button class="btn btn-ghost" onclick="copyOutput('bulk-host-output')">⎘ Copy</button>
+      </div>
+      <div class="output-container">
+        <div class="output-header">
+          <div class="output-header-left"><div class="output-dots"><div class="output-dot"></div><div class="output-dot"></div><div class="output-dot"></div></div><span class="output-title">Generated Commands</span></div>
+          <span class="output-line-count" id="bulk-host-linecount"></span>
+        </div>
+        <div class="output-body" id="bulk-host-output"></div>
+      </div>
+    </div>
+
+    <!-- NETWORK OBJECTS -->
+    <div id="page-create_network_objects" class="page">
+      <div class="page-header">
+        <div class="page-header-left">
+          <div class="page-title">Create Network Objects</div>
+          <div class="page-desc">Generate <code>add network</code> commands with VLAN naming convention.</div>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="clearEntries('network-entries'); addNetworkEntry()">✕ Clear All</button>
+      </div>
+      <div class="card">
+        <div class="card-title">Network Entries <span class="card-count" id="network-count">0</span></div>
+        <div id="network-entries"></div>
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="addNetworkEntry()">+ Add Entry</button>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-success" onclick="generateNetworkOutput()">▶ Generate Commands</button>
+        <button class="btn btn-primary" onclick="downloadOutput('network-output','checkpoint_network_objects.txt')">↓ Download</button>
+        <button class="btn btn-ghost" onclick="copyOutput('network-output')">⎘ Copy</button>
+      </div>
+      <div class="output-container">
+        <div class="output-header">
+          <div class="output-header-left"><div class="output-dots"><div class="output-dot"></div><div class="output-dot"></div><div class="output-dot"></div></div><span class="output-title">Generated Commands</span></div>
+          <span class="output-line-count" id="network-linecount"></span>
+        </div>
+        <div class="output-body" id="network-output"></div>
+      </div>
+    </div>
+
+    <!-- NETWORK GROUPS -->
+    <div id="page-create_network_groups" class="page">
+      <div class="page-header">
+        <div class="page-header-left">
+          <div class="page-title">Create Network Groups</div>
+          <div class="page-desc">Generate <code>add group</code> commands with member objects.</div>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="clearEntries('group-entries'); addGroupEntry()">✕ Clear All</button>
+      </div>
+      <div class="card">
+        <div class="card-title">Group Entries <span class="card-count" id="group-count">0</span></div>
+        <div id="group-entries"></div>
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="addGroupEntry()">+ Add Group</button>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-success" onclick="generateGroupOutput()">▶ Generate Commands</button>
+        <button class="btn btn-primary" onclick="downloadOutput('group-output','checkpoint_network_groups.txt')">↓ Download</button>
+        <button class="btn btn-ghost" onclick="copyOutput('group-output')">⎘ Copy</button>
+      </div>
+      <div class="output-container">
+        <div class="output-header">
+          <div class="output-header-left"><div class="output-dots"><div class="output-dot"></div><div class="output-dot"></div><div class="output-dot"></div></div><span class="output-title">Generated Commands</span></div>
+          <span class="output-line-count" id="group-linecount"></span>
+        </div>
+        <div class="output-body" id="group-output"></div>
+      </div>
+    </div>
+
+    <!-- GAIA INTERFACE -->
+    <div id="page-gaia_interface" class="page">
+      <div class="page-header">
+        <div class="page-header-left">
+          <div class="page-title">Gaia Interface Configuration</div>
+          <div class="page-desc">Generate VLAN sub-interface commands using <code>comments</code> key.</div>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="clearEntries('gaia-iface-entries'); addGaiaIfaceEntry('gaia-iface-entries')">✕ Clear All</button>
+      </div>
+      <div class="card">
+        <div class="card-title">Interface Entries <span class="card-count" id="gaia-iface-count">0</span></div>
+        <div id="gaia-iface-entries"></div>
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="addGaiaIfaceEntry('gaia-iface-entries')">+ Add Interface</button>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-success" onclick="generateGaiaIfaceOutput('gaia-iface-entries','gaia-iface-output',false)">▶ Generate</button>
+        <button class="btn btn-primary" onclick="downloadOutput('gaia-iface-output','gaia_interfaces.txt')">↓ Download</button>
+        <button class="btn btn-ghost" onclick="copyOutput('gaia-iface-output')">⎘ Copy</button>
+      </div>
+      <div class="output-container">
+        <div class="output-header">
+          <div class="output-header-left"><div class="output-dots"><div class="output-dot"></div><div class="output-dot"></div><div class="output-dot"></div></div><span class="output-title">Generated Commands</span></div>
+          <span class="output-line-count" id="gaia-iface-linecount"></span>
+        </div>
+        <div class="output-body" id="gaia-iface-output"></div>
+      </div>
+    </div>
+
+    <!-- GAIA EMBEDDED INTERFACE -->
+    <div id="page-gaia_embedded_interface" class="page">
+      <div class="page-header">
+        <div class="page-header-left">
+          <div class="page-title">Gaia Embedded Interface</div>
+          <div class="page-desc">Configure embedded interfaces using <code>description</code> instead of <code>comments</code>.</div>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="clearEntries('gaia-embedded-entries'); addGaiaIfaceEntry('gaia-embedded-entries')">✕ Clear All</button>
+      </div>
+      <div class="card">
+        <div class="card-title">Interface Entries <span class="card-count" id="gaia-embedded-count">0</span></div>
+        <div id="gaia-embedded-entries"></div>
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="addGaiaIfaceEntry('gaia-embedded-entries')">+ Add Interface</button>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-success" onclick="generateGaiaIfaceOutput('gaia-embedded-entries','gaia-embedded-output',true)">▶ Generate</button>
+        <button class="btn btn-primary" onclick="downloadOutput('gaia-embedded-output','gaia_embedded_interfaces.txt')">↓ Download</button>
+        <button class="btn btn-ghost" onclick="copyOutput('gaia-embedded-output')">⎘ Copy</button>
+      </div>
+      <div class="output-container">
+        <div class="output-header">
+          <div class="output-header-left"><div class="output-dots"><div class="output-dot"></div><div class="output-dot"></div><div class="output-dot"></div></div><span class="output-title">Generated Commands</span></div>
+          <span class="output-line-count" id="gaia-embedded-linecount"></span>
+        </div>
+        <div class="output-body" id="gaia-embedded-output"></div>
+      </div>
+    </div>
+
+    <!-- SIMPLE GATEWAY -->
+    <div id="page-simple_gateway" class="page">
+      <div class="page-header">
+        <div class="page-header-left">
+          <div class="page-title">Single Gateway Configuration</div>
+          <div class="page-desc">Generate <code>add simple-gateway</code> with blades, interfaces, and log settings.</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Gateway Details</div>
+        <div class="form-grid">
+          <div class="field"><label>Gateway Name</label><input type="text" id="sgw-name" placeholder="GW-NAME-01"></div>
+          <div class="field"><label>Color</label><select id="sgw-color"></select></div>
+          <div class="field"><label>Gateway IP</label><input type="text" id="sgw-ip" placeholder="10.0.0.1" oninput="updatePortal('sgw-ip','sgw-portal')"></div>
+          <div class="field"><label>Hardware</label><select id="sgw-hw">
+            <option>3000 Appliances</option>
+            <option>5000 Appliances</option>
+            <option>6000 Appliances</option>
+            <option>7000 Appliances</option>
+            <option>9000 Appliances</option>
+            <option>15000 Appliances</option>
+            <option>16000 Appliances</option>
+            <option>19000 Appliances</option>
+            <option>23000 Appliances</option>
+            <option>26000 Appliances</option>
+            <option>28000 Appliances</option>
+            <option>29000 Appliances</option>
+            <option>Open server</option>
+          </select></div>
+          <div class="field"><label>Version</label><input type="text" id="sgw-ver" value="R82"></div>
+          <div class="field"><label>Comments</label><input type="text" id="sgw-comments"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Blades & Security</div>
+        <div class="form-grid form-grid-2">
+          <div class="field"><label>Firewall</label><select id="sgw-fw"><option value="true">TRUE</option><option value="false">FALSE</option></select></div>
+          <div class="field"><label>VPN</label><select id="sgw-vpn"><option value="false">FALSE</option><option value="true">TRUE</option></select></div>
+          <div class="field"><label>IPS</label><select id="sgw-ips"><option value="true">TRUE</option><option value="false">FALSE</option></select></div>
+          <div class="field"><label>Application Control</label><select id="sgw-appc"><option value="true">TRUE</option><option value="false">FALSE</option></select></div>
+          <div class="field"><label>URL Filtering</label><select id="sgw-urlf"><option value="true">TRUE</option><option value="false">FALSE</option></select></div>
+          <div class="field"><label>Content Awareness</label><select id="sgw-ctnt"><option value="false">FALSE</option><option value="true">TRUE</option></select></div>
+          <div class="field"><label>Anti-Bot</label><select id="sgw-ab"><option value="true">TRUE</option><option value="false">FALSE</option></select></div>
+          <div class="field"><label>Anti-Virus</label><select id="sgw-av"><option value="true">TRUE</option><option value="false">FALSE</option></select></div>
+          <div class="field"><label>Threat Emulation</label><select id="sgw-te"><option value="false">FALSE</option><option value="true">TRUE</option></select></div>
+          <div class="field"><label>Identity Awareness</label><select id="sgw-ia"><option value="false">FALSE</option><option value="true">TRUE</option></select></div>
+          <div class="field"><label>HTTPS Inspection</label><select id="sgw-https"><option value="false">FALSE</option><option value="true">TRUE</option></select></div>
+          <div class="field"><label>NAT Hide Internal</label><select id="sgw-nat"><option value="true">TRUE</option><option value="false">FALSE</option></select></div>
+          <div class="field"><label>Forward Logs to Log Server</label><select id="sgw-fwd"><option value="true">TRUE</option><option value="false">FALSE</option></select></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Log Servers & Policy</div>
+        <div class="form-grid">
+          <div class="field"><label>Portal URL (auto)</label><input type="text" id="sgw-portal" readonly></div>
+          <div class="field"><label>Send Logs To Server</label><input type="text" id="sgw-log1" placeholder="Log Server Name"></div>
+          <div class="field"><label>Backup Server 1</label><input type="text" id="sgw-log2" placeholder="Backup Server 1 Name"></div>
+          <div class="field"><label>Backup Server 2</label><input type="text" id="sgw-log3" placeholder="Backup Server 2 Name"></div>
+          <div class="field"><label>Fetch Policy</label><input type="text" id="sgw-policy" placeholder="Policy Server Name"></div>
+          <div class="field"><label>Connection Persistence</label><select id="sgw-persist"><option value="keep-data-connections">keep-data-connections</option><option value="keep-all-connections">keep-all-connections</option><option value="new-ip-only">new-ip-only</option><option value="none">none</option></select></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Interfaces <span class="card-count" id="sgw-iface-count">0</span></div>
+        <div id="sgw-iface-entries"></div>
+        <div class="btn-row">
+          <button class="btn btn-primary btn-sm" onclick="addGWIface('sgw')">+ Add Interface</button>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-success" onclick="generateSGWOutput()">▶ Generate Command</button>
+        <button class="btn btn-primary" onclick="downloadOutput('sgw-output','simple_gateway.txt')">↓ Download</button>
+        <button class="btn btn-ghost" onclick="copyOutput('sgw-output')">⎘ Copy</button>
+      </div>
+      <div class="output-container">
+        <div class="output-header"><div class="output-header-left"><div class="output-dots"><div class="output-dot"></div><div class="output-dot"></div><div class="output-dot"></div></div><span class="output-title">Generated Command</span></div></div>
+        <div class="output-body" id="sgw-output"></div>
+      </div>
+    </div>
+
+    <!-- CLUSTER GATEWAY -->
+    <div id="page-cluster_gateway" class="page">
+      <div class="page-header">
+        <div class="page-header-left">
+          <div class="page-title">Cluster Gateway Configuration</div>
+          <div class="page-desc">Generate <code>add simple-cluster</code> with ClusterXL HA and two members.</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Cluster Details</div>
+        <div class="form-grid">
+          <div class="field"><label>Cluster Name</label><input type="text" id="cgw-name" placeholder="CLUSTER-NAME-01"></div>
+          <div class="field"><label>Color</label><select id="cgw-color"></select></div>
+          <div class="field"><label>Cluster VIP</label><input type="text" id="cgw-ip" placeholder="10.0.0.1" oninput="updatePortal('cgw-ip','cgw-portal')"></div>
+          <div class="field"><label>Hardware</label><select id="cgw-hw">
+            <option>3000 Appliances</option>
+            <option>5000 Appliances</option>
+            <option>6000 Appliances</option>
+            <option>7000 Appliances</option>
+            <option>9000 Appliances</option>
+            <option>15000 Appliances</option>
+            <option>16000 Appliances</option>
+            <option>19000 Appliances</option>
+            <option>23000 Appliances</option>
+            <option>26000 Appliances</option>
+            <option>28000 Appliances</option>
+            <option>29000 Appliances</option>
+            <option>Open server</option>
+          </select></div>
+          <div class="field"><label>Version</label><input type="text" id="cgw-ver" value="R82"></div>
+          <div class="field"><label>Comments</label><input type="text" id="cgw-comments"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Cluster Members</div>
+        <div class="form-grid form-grid-2">
+          <div class="field"><label>Member 1 Name</label><input type="text" id="cgw-m1name" placeholder="CLUSTER-NAME-01-M1"></div>
+          <div class="field"><label>Member 1 IP</label><input type="text" id="cgw-m1ip" placeholder="10.0.0.2"></div>
+          <div class="field"><label>Member 2 Name</label><input type="text" id="cgw-m2name" placeholder="CLUSTER-NAME-01-M2"></div>
+          <div class="field"><label>Member 2 IP</label><input type="text" id="cgw-m2ip" placeholder="10.0.0.3"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Cluster Mode & Blades</div>
+        <div class="form-grid form-grid-2">
+          <div class="field"><label>Cluster Mode</label><select id="cgw-mode">
+            <option value="ClusterXL High Availability">ClusterXL High Availability</option>
+            <option value="ClusterXL Load Sharing Multicast">ClusterXL Load Sharing Multicast</option>
+            <option value="ClusterXL Load Sharing Unicast">ClusterXL Load Sharing Unicast</option>
+            <option value="ElasticXL">ElasticXL (R82+)</option>
+          </select></div>
+          <div class="field"><label>Connection Persistence</label><select id="cgw-persist"><option value="keep-data-connections">keep-data-connections</option><option value="keep-all-connections">keep-all-connections</option><option value="new-ip-only">new-ip-only</option><option value="none">none</option></select></div>
+          <div class="field"><label>Firewall</label><select id="cgw-fw"><option value="true">TRUE</option><option value="false">FALSE</option></select></div>
+          <div class="field"><label>VPN</label><select id="cgw-vpn"><option value="false">FALSE</option><option value="true">TRUE</option></select></div>
+          <div class="field"><label>IPS</label><select id="cgw-ips"><option value="true">TRUE</option><option value="false">FALSE</option></select></div>
+          <div class="field"><label>Application Control</label><select id="cgw-appc"><option value="true">TRUE</option><option value="false">FALSE</option></select></div>
+          <div class="field"><label>URL Filtering</label><select id="cgw-urlf"><option value="true">TRUE</option><option value="false">FALSE</option></select></div>
+          <div class="field"><label>Content Awareness</label><select id="cgw-ctnt"><option value="false">FALSE</option><option value="true">TRUE</option></select></div>
+          <div class="field"><label>Anti-Bot</label><select id="cgw-ab"><option value="true">TRUE</option><option value="false">FALSE</option></select></div>
+          <div class="field"><label>Anti-Virus</label><select id="cgw-av"><option value="true">TRUE</option><option value="false">FALSE</option></select></div>
+          <div class="field"><label>Threat Emulation</label><select id="cgw-te"><option value="false">FALSE</option><option value="true">TRUE</option></select></div>
+          <div class="field"><label>Identity Awareness</label><select id="cgw-ia"><option value="false">FALSE</option><option value="true">TRUE</option></select></div>
+          <div class="field"><label>HTTPS Inspection</label><select id="cgw-https"><option value="false">FALSE</option><option value="true">TRUE</option></select></div>
+          <div class="field"><label>NAT Hide Internal</label><select id="cgw-nat"><option value="true">TRUE</option><option value="false">FALSE</option></select></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Log Servers</div>
+        <div class="form-grid">
+          <div class="field"><label>Portal URL (auto)</label><input type="text" id="cgw-portal" readonly></div>
+          <div class="field"><label>Send Logs To Server</label><input type="text" id="cgw-log1" placeholder="Log Server Name"></div>
+          <div class="field"><label>Backup Server 1</label><input type="text" id="cgw-log2" placeholder="Backup Server 1 Name"></div>
+          <div class="field"><label>Backup Server 2</label><input type="text" id="cgw-log3" placeholder="Backup Server 2 Name"></div>
+          <div class="field"><label>Fetch Policy</label><input type="text" id="cgw-policy" placeholder="Policy Server Name"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Cluster Interfaces <span class="card-count" id="cgw-ci-count">0</span></div>
+        <div id="cgw-cluster-ifaces"></div>
+        <div class="btn-row"><button class="btn btn-primary btn-sm" onclick="addClusterIface()">+ Add Cluster Interface</button></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Member 1 Interfaces <span class="card-count" id="cgw-m1-count">0</span></div>
+        <div id="cgw-m1-ifaces"></div>
+        <div class="btn-row"><button class="btn btn-primary btn-sm" onclick="addMemberIface('cgw-m1-ifaces','cgw-m1-count','Member 1')">+ Add Interface</button></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Member 2 Interfaces <span class="card-count" id="cgw-m2-count">0</span></div>
+        <div id="cgw-m2-ifaces"></div>
+        <div class="btn-row"><button class="btn btn-primary btn-sm" onclick="addMemberIface('cgw-m2-ifaces','cgw-m2-count','Member 2')">+ Add Interface</button></div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-success" onclick="generateCGWOutput()">▶ Generate Command</button>
+        <button class="btn btn-primary" onclick="downloadOutput('cgw-output','cluster_gateway.txt')">↓ Download</button>
+        <button class="btn btn-ghost" onclick="copyOutput('cgw-output')">⎘ Copy</button>
+      </div>
+      <div class="output-container">
+        <div class="output-header"><div class="output-header-left"><div class="output-dots"><div class="output-dot"></div><div class="output-dot"></div><div class="output-dot"></div></div><span class="output-title">Generated Command</span></div></div>
+        <div class="output-body" id="cgw-output"></div>
+      </div>
+    </div>
+
+    <!-- AUTOCONFIG -->
+    <div id="page-autoconfig" class="page">
+      <div class="page-header">
+        <div class="page-header-left">
+          <div class="page-title">Gateway Autoconfig File</div>
+          <div class="page-desc">Full autoconfig .cfg with bonding, routing, DHCP, security hardening.</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Gateway Identity</div>
+        <div class="form-grid">
+          <div class="field"><label>Hostname</label><input type="text" id="ac-hostname" placeholder="GW-SITE-01"></div>
+          <div class="field"><label>MAC Address</label><input type="text" id="ac-mac" placeholder="AA:BB:CC:DD:EE:FF"></div>
+          <div class="field"><label>Expert Password Hash</label><input type="password" id="ac-pw"></div>
+          <div class="field"><label>Timezone</label><input type="text" id="ac-tz" value="Europe/Berlin"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Routing</div>
+        <div class="form-grid form-grid-2">
+          <div class="field"><label>Default Gateway (Internet)</label><input type="text" id="ac-defgw" placeholder="203.0.113.1"></div>
+          <div class="field"><label>VCE / Internal Gateway</label><input type="text" id="ac-vcegw" placeholder="10.0.0.1"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title" style="display:flex;align-items:center;justify-content:space-between;">
+          <span>Domain Name</span>
+          <button class="btn btn-ghost btn-sm" onclick="toggleOptionalField('ac-domain-wrap','ac-domain-toggle')" id="ac-domain-toggle">+ Add Domain</button>
+        </div>
+        <div id="ac-domain-wrap" style="display:none;margin-top:4px;">
+          <div class="form-grid">
+            <div class="field"><label>Domain Name</label><input type="text" id="ac-domain" placeholder="example.com"></div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">VLAN Interfaces <span class="card-count" id="ac-iface-count">0</span></div>
+        <div id="ac-iface-entries"></div>
+        <div class="btn-row"><button class="btn btn-primary btn-sm" onclick="addACIfaceEntry()">+ Add Interface</button></div>
+      </div>
+      <div class="card">
+        <div class="card-title">DHCP Subnets <span class="card-count" id="ac-dhcp-count">0</span></div>
+        <div id="ac-dhcp-entries"></div>
+        <div class="btn-row"><button class="btn btn-primary btn-sm" onclick="addACDHCPEntry()">+ Add DHCP Subnet</button></div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-success" onclick="generateAutoconfig()">▶ Generate Config</button>
+        <button class="btn btn-primary" onclick="downloadAutoconfig()">↓ Download .cfg</button>
+        <button class="btn btn-ghost" onclick="copyOutput('ac-output')">⎘ Copy</button>
+      </div>
+      <div class="output-container">
+        <div class="output-header">
+          <div class="output-header-left"><div class="output-dots"><div class="output-dot"></div><div class="output-dot"></div><div class="output-dot"></div></div><span class="output-title">Autoconfig Output</span></div>
+          <span class="output-line-count" id="ac-linecount"></span>
+        </div>
+        <div class="output-body" id="ac-output"></div>
+      </div>
+    </div>
+
+    <!-- FTW -->
+    <div id="page-ftw" class="page">
+      <div class="page-header">
+        <div class="page-header-left">
+          <div class="page-title">First Time Wizard Configuration</div>
+          <div class="page-desc">Generate a .cfg file for the Gaia First Time Wizard (FTW) process.</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">FTW Parameters</div>
+        <div class="form-grid">
+          <div class="field"><label>Hostname</label><input type="text" id="ftw-hostname" placeholder="GW-SITE-01"></div>
+          <div class="field"><label>MAC Address</label><input type="text" id="ftw-mac" placeholder="AA:BB:CC:DD:EE:FF"></div>
+          <div class="field"><label>Admin Password Hash</label><input type="password" id="ftw-pw"></div>
+          <div class="field"><label>Timezone</label><input type="text" id="ftw-tz" value="Europe/Berlin"></div>
+          <div class="field"><label>Cluster Member</label><select id="ftw-cluster"><option value="true">TRUE (Cluster)</option><option value="false">FALSE (Standalone)</option></select></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title" style="display:flex;align-items:center;justify-content:space-between;">
+          <span>Domain Name</span>
+          <button class="btn btn-ghost btn-sm" onclick="toggleOptionalField('ftw-domain-wrap','ftw-domain-toggle')" id="ftw-domain-toggle">+ Add Domain</button>
+        </div>
+        <div id="ftw-domain-wrap" style="display:none;margin-top:4px;">
+          <div class="form-grid">
+            <div class="field"><label>Domain Name</label><input type="text" id="ftw-domain" placeholder="example.com"></div>
+          </div>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-success" onclick="generateFTW()">▶ Generate Config</button>
+        <button class="btn btn-primary" onclick="downloadFTW()">↓ Download .cfg</button>
+        <button class="btn btn-ghost" onclick="copyOutput('ftw-output')">⎘ Copy</button>
+      </div>
+      <div class="output-container">
+        <div class="output-header">
+          <div class="output-header-left"><div class="output-dots"><div class="output-dot"></div><div class="output-dot"></div><div class="output-dot"></div></div><span class="output-title">FTW Config Output</span></div>
+          <span class="output-line-count" id="ftw-linecount"></span>
+        </div>
+        <div class="output-body" id="ftw-output"></div>
+      </div>
+    </div>
+
+    <!-- CISCO SWITCH -->
+    <div id="page-cisco_switch" class="page">
+      <div class="page-header">
+        <div class="page-header-left">
+          <div class="page-title">Cisco Switch Config Generator</div>
+          <div class="page-desc">Generate full IOS switch configuration with VLANs, SSH hardening, trunk and port-channel interfaces.</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title cisco">Switch Identity</div>
+        <div class="form-grid">
+          <div class="field"><label>Hostname</label><input type="text" id="sw-hostname" placeholder="SW-SITE-01"></div>
+          <div class="field"><label>Password</label><input type="password" id="sw-pw"></div>
+          <div class="field"><label>Location</label><input type="text" id="sw-location" placeholder="London DC"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title cisco" style="display:flex;align-items:center;justify-content:space-between;">
+          <span>Domain Name</span>
+          <button class="btn btn-ghost btn-sm" onclick="toggleOptionalField('sw-domain-wrap','sw-domain-toggle')" id="sw-domain-toggle">+ Add Domain</button>
+        </div>
+        <div id="sw-domain-wrap" style="display:none;margin-top:4px;">
+          <div class="form-grid">
+            <div class="field"><label>Domain Name</label><input type="text" id="sw-domain" placeholder="example.com"></div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title cisco">Management Interface</div>
+        <div class="form-grid form-grid-2">
+          <div class="field"><label>L3 VLAN ID</label><input type="text" id="sw-l3vlan" placeholder="10"></div>
+          <div class="field"><label>L3 VLAN Description</label><input type="text" id="sw-l3name" placeholder="MGMT"></div>
+          <div class="field"><label>IP Address</label><input type="text" id="sw-ip" placeholder="10.0.0.10"></div>
+          <div class="field"><label>Subnet Mask</label><input type="text" id="sw-sm" placeholder="255.255.255.0"></div>
+          <div class="field full"><label>Default Gateway</label><input type="text" id="sw-gw" placeholder="10.0.0.1"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title cisco">VLANs <span class="card-count" id="sw-vlan-count">0</span></div>
+        <div id="sw-vlan-entries"></div>
+        <div class="btn-row"><button class="btn btn-warn btn-sm" onclick="addVLANEntry()">+ Add VLAN</button></div>
+      </div>
+      <div class="card">
+        <div class="card-title cisco">Trunk & Port-Channel</div>
+        <div class="form-grid form-grid-2">
+          <div class="field"><label>Trunk Interface Range (e.g. 1/0/1-10)</label><input type="text" id="sw-trunk" placeholder="1/0/1-2"></div>
+          <div class="field">
+            <label>Port Channels</label>
+            <div style="display:flex;gap:14px;align-items:center;margin-top:7px;">
+              <label style="text-transform:none;letter-spacing:0;font-size:12px;color:var(--text);display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" id="sw-pc1"> PC1</label>
+              <label style="text-transform:none;letter-spacing:0;font-size:12px;color:var(--text);display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" id="sw-pc2"> PC2</label>
+              <label style="text-transform:none;letter-spacing:0;font-size:12px;color:var(--text);display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" id="sw-pc3"> PC3</label>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-warn" onclick="generateSwitchConfig()">▶ Generate Config</button>
+        <button class="btn btn-primary" onclick="downloadSwitchConfig()">↓ Download</button>
+        <button class="btn btn-ghost" onclick="copyOutput('sw-output')">⎘ Copy</button>
+      </div>
+      <div class="output-container">
+        <div class="output-header">
+          <div class="output-header-left"><div class="output-dots"><div class="output-dot"></div><div class="output-dot"></div><div class="output-dot"></div></div><span class="output-title">Switch Configuration</span></div>
+          <span class="output-line-count" id="sw-linecount"></span>
+        </div>
+        <div class="output-body cisco-color" id="sw-output"></div>
+      </div>
+    </div>
+
+    <!-- SUBNET CALCULATOR -->
+    <div id="page-subnet_calc" class="page">
+      <div class="page-header">
+        <div class="page-header-left">
+          <div class="page-title">Subnet Calculator</div>
+          <div class="page-desc">Enter an IP and prefix length — get full subnet details instantly.</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Input</div>
+        <div class="form-grid form-grid-2">
+          <div class="field"><label>IP Address / CIDR (e.g. 10.0.0.0/24)</label><input type="text" id="sc-cidr" placeholder="10.0.0.0/24" oninput="calcSubnet()"></div>
+          <div class="field"><label>Or enter Subnet Mask separately</label><input type="text" id="sc-mask" placeholder="255.255.255.0" oninput="calcSubnetFromMask()"></div>
+        </div>
+      </div>
+      <div class="card" id="sc-results" style="display:none;">
+        <div class="card-title green">Results</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;" id="sc-grid"></div>
+      </div>
+      <div class="card" id="sc-hosts-card" style="display:none;">
+        <div class="card-title" style="display:flex;align-items:center;justify-content:space-between;">
+          <span>Usable Host Range</span>
+          <button class="btn btn-ghost btn-sm" onclick="toggleHostList()">Show All Hosts</button>
+        </div>
+        <div id="sc-hostlist" style="display:none;max-height:200px;overflow-y:auto;margin-top:8px;">
+          <div class="output-body" id="sc-hostlist-body" style="max-height:180px;font-size:11px;"></div>
+        </div>
+        <div style="margin-top:8px;font-size:11px;color:var(--text-dim);" id="sc-summary"></div>
+      </div>
+    </div>
+
+    <!-- IP / VLAN PLANNER -->
+    <div id="page-ip_planner" class="page">
+      <div class="page-header">
+        <div class="page-header-left">
+          <div class="page-title">IP / VLAN Planner</div>
+          <div class="page-desc">Define your VLANs and host requirements — auto-generates a non-overlapping supernet plan.</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Supernet Settings</div>
+        <div class="form-grid form-grid-3">
+          <div class="field"><label>Starting Network (e.g. 10.0.0.0)</label><input type="text" id="vp-base" placeholder="10.0.0.0" oninput="planVLANs()"></div>
+          <div class="field"><label>Number of VLANs</label><input type="text" id="vp-count" placeholder="4" oninput="syncVLANRows()"></div>
+          <div class="field"><label>Default Hosts per VLAN</label><input type="text" id="vp-defhosts" placeholder="50" oninput="planVLANs()"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title green">VLAN Definitions <span class="card-count" id="vp-vlan-count">0</span></div>
+        <div id="vp-vlan-rows"></div>
+      </div>
+      <div class="card" id="vp-results" style="display:none;">
+        <div class="card-title">Supernet Summary</div>
+        <div id="vp-supernet-info" style="font-size:12px;color:var(--accent);margin-bottom:12px;"></div>
+        <div style="overflow-x:auto;">
+          <table id="vp-table" style="width:100%;border-collapse:collapse;font-size:12px;">
+            <thead>
+              <tr style="border-bottom:1px solid var(--border2);">
+                <th style="text-align:left;padding:6px 10px;color:var(--text-dim);font-family:'Syne',sans-serif;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;">VLAN</th>
+                <th style="text-align:left;padding:6px 10px;color:var(--text-dim);font-family:'Syne',sans-serif;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;">Name</th>
+                <th style="text-align:left;padding:6px 10px;color:var(--text-dim);font-family:'Syne',sans-serif;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;">Hosts Needed</th>
+                <th style="text-align:left;padding:6px 10px;color:var(--text-dim);font-family:'Syne',sans-serif;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;">Subnet</th>
+                <th style="text-align:left;padding:6px 10px;color:var(--text-dim);font-family:'Syne',sans-serif;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;">Mask</th>
+                <th style="text-align:left;padding:6px 10px;color:var(--text-dim);font-family:'Syne',sans-serif;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;">Gateway</th>
+                <th style="text-align:left;padding:6px 10px;color:var(--text-dim);font-family:'Syne',sans-serif;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;">Broadcast</th>
+                <th style="text-align:left;padding:6px 10px;color:var(--text-dim);font-family:'Syne',sans-serif;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;">Usable Hosts</th>
+              </tr>
+            </thead>
+            <tbody id="vp-tbody"></tbody>
+          </table>
+        </div>
+        <div class="btn-row" style="margin-top:14px;">
+          <button class="btn btn-success" onclick="copyVLANTable()">⎘ Copy as Text</button>
+          <button class="btn btn-primary" onclick="downloadVLANPlan()">↓ Download CSV</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PASSWORD GENERATOR -->
+    <div id="page-pass_gen" class="page">
+      <div class="page-header">
+        <div class="page-header-left">
+          <div class="page-title">Password Generator</div>
+          <div class="page-desc">Generate strong, complex passwords with full control over character sets.</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Parameters</div>
+        <div class="form-grid form-grid-3">
+          <div class="field"><label>Length</label><input type="text" id="pg-len" value="24" oninput="generatePassword()"></div>
+          <div class="field"><label>Count (generate multiple)</label><input type="text" id="pg-count" value="5" oninput="generatePassword()"></div>
+          <div class="field"><label>Exclude Ambiguous (0,O,l,1,I)</label><select id="pg-noambig" onchange="generatePassword()"><option value="yes">Yes</option><option value="no">No</option></select></div>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:16px;margin-top:14px;">
+          <label style="text-transform:none;letter-spacing:0;font-size:12px;color:var(--text);display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" id="pg-upper" checked onchange="generatePassword()"> Uppercase (A-Z)</label>
+          <label style="text-transform:none;letter-spacing:0;font-size:12px;color:var(--text);display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" id="pg-lower" checked onchange="generatePassword()"> Lowercase (a-z)</label>
+          <label style="text-transform:none;letter-spacing:0;font-size:12px;color:var(--text);display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" id="pg-num" checked onchange="generatePassword()"> Numbers (0-9)</label>
+          <label style="text-transform:none;letter-spacing:0;font-size:12px;color:var(--text);display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" id="pg-sym" checked onchange="generatePassword()"> Symbols (!@#$%^&*)</label>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title green">Generated Passwords</div>
+        <div id="pg-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+        <div class="btn-row">
+          <button class="btn btn-success" onclick="generatePassword()">↻ Regenerate</button>
+          <button class="btn btn-ghost" onclick="copyAllPasswords()">⎘ Copy All</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PASSWORD HASH -->
+    <div id="page-pass_hash" class="page">
+      <div class="page-header">
+        <div class="page-header-left">
+          <div class="page-title">OpenSSL Password Hash</div>
+          <div class="page-desc">Generates crypt-format hashes matching <code>openssl passwd -1 / -5 / -6</code> — output is <code>$id$salt$hash</code>.</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Hash Password</div>
+        <div class="form-grid form-grid-2">
+          <div class="field"><label>Password</label><input type="text" id="ph-plain" placeholder="Enter your password" oninput="updateCryptHash()"></div>
+          <div class="field"><label>Algorithm</label><select id="ph-algo" onchange="updateCryptHash()">
+            <option value="md5crypt">MD5-crypt  ($1$)  —  openssl passwd -1</option>
+            <option value="sha256crypt">SHA-256-crypt  ($5$)  —  openssl passwd -5</option>
+            <option value="sha512crypt" selected>SHA-512-crypt  ($6$)  —  openssl passwd -6</option>
+          </select></div>
+          <div class="field"><label>Salt <span style="color:var(--text-dim);font-size:9px;">(max 8 chars for MD5 · max 16 for SHA · auto-generated if blank)</span></label>
+            <input type="text" id="ph-salt" placeholder="Leave blank to auto-generate" oninput="updateCryptHash()"></div>
+          <div class="field" style="display:flex;align-items:flex-end;gap:8px;">
+            <button class="btn btn-primary" style="flex:1;" onclick="generateSalt()">⚡ Generate Salt</button>
+            <button class="btn btn-ghost btn-sm" onclick="clearSalt()">✕ Clear</button>
+          </div>
+        </div>
+        <div id="ph-salt-result" style="margin-top:14px;display:none;">
+          <div style="margin-bottom:10px;">
+            <label style="font-size:10px;letter-spacing:0.07em;text-transform:uppercase;color:var(--text-dim);font-family:'Syne',sans-serif;font-weight:600;">Salt Used</label>
+            <div style="display:flex;align-items:center;gap:8px;margin-top:4px;">
+              <div id="ph-salt-display" style="flex:1;background:var(--output-bg);border:1px solid var(--border);border-radius:3px;padding:8px 12px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--warn);word-break:break-all;"></div>
+              <button class="btn btn-ghost btn-sm" onclick="safeCopy('ph-salt-display')">⎘</button>
+            </div>
+          </div>
+          <div style="margin-bottom:10px;">
+            <label style="font-size:10px;letter-spacing:0.07em;text-transform:uppercase;color:var(--text-dim);font-family:'Syne',sans-serif;font-weight:600;">Equivalent OpenSSL Command</label>
+            <div style="display:flex;align-items:center;gap:8px;margin-top:4px;">
+              <div id="ph-openssl-cmd" style="flex:1;background:var(--output-bg);border:1px solid var(--border);border-radius:3px;padding:8px 12px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--accent);word-break:break-all;"></div>
+              <button class="btn btn-ghost btn-sm" onclick="safeCopy('ph-openssl-cmd')">⎘</button>
+            </div>
+          </div>
+          <div>
+            <label style="font-size:10px;letter-spacing:0.07em;text-transform:uppercase;color:var(--text-dim);font-family:'Syne',sans-serif;font-weight:600;">Hashed Output  ($id$salt$hash)</label>
+            <div style="display:flex;align-items:center;gap:8px;margin-top:4px;">
+              <div id="ph-salted-string" style="flex:1;background:var(--output-bg);border:1px solid var(--border);border-radius:3px;padding:8px 12px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--accent2);word-break:break-all;"></div>
+              <button class="btn btn-ghost btn-sm" onclick="safeCopy('ph-salted-string')">⎘ Copy Hash</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="info-box" style="margin-top:4px;">ℹ Output matches exactly what <code>openssl passwd</code> produces. Use directly in Checkpoint Gaia expert password hash fields, Linux <code>/etc/shadow</code>, or any system accepting crypt(3) format.</div>
+    </div>
+
+    <!-- WILDCARD CONVERTER -->
+    <div id="page-wildcard" class="page">
+      <div class="page-header">
+        <div class="page-header-left">
+          <div class="page-title">Wildcard Mask Converter</div>
+          <div class="page-desc">Convert subnet masks ↔ wildcard masks instantly. Essential for ACL and firewall rules.</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Convert</div>
+        <div class="form-grid form-grid-2">
+          <div class="field">
+            <label>Subnet Mask → Wildcard</label>
+            <input type="text" id="wc-subnet" placeholder="e.g. 255.255.255.0" oninput="subnetToWildcard()">
+          </div>
+          <div class="field">
+            <label>Result — Wildcard Mask</label>
+            <div style="display:flex;gap:8px;">
+              <div id="wc-result1" style="flex:1;background:var(--output-bg);border:1px solid var(--border);border-radius:3px;padding:7px 10px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--accent2);min-height:32px;"></div>
+              <button class="btn btn-ghost btn-sm" onclick="safeCopy('wc-result1')">⎘</button>
+            </div>
+          </div>
+          <div class="field">
+            <label>Wildcard Mask → Subnet</label>
+            <input type="text" id="wc-wild" placeholder="e.g. 0.0.0.255" oninput="wildcardToSubnet()">
+          </div>
+          <div class="field">
+            <label>Result — Subnet Mask</label>
+            <div style="display:flex;gap:8px;">
+              <div id="wc-result2" style="flex:1;background:var(--output-bg);border:1px solid var(--border);border-radius:3px;padding:7px 10px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--accent2);min-height:32px;"></div>
+              <button class="btn btn-ghost btn-sm" onclick="safeCopy('wc-result2')">⎘</button>
+            </div>
+          </div>
+          <div class="field">
+            <label>CIDR Prefix → Both Masks</label>
+            <input type="text" id="wc-cidr" placeholder="e.g. /24 or 24" oninput="cidrToBoth()">
+          </div>
+          <div class="field">
+            <label>Result — Subnet / Wildcard</label>
+            <div style="display:flex;gap:8px;">
+              <div id="wc-result3" style="flex:1;background:var(--output-bg);border:1px solid var(--border);border-radius:3px;padding:7px 10px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--accent2);min-height:32px;"></div>
+              <button class="btn btn-ghost btn-sm" onclick="safeCopy('wc-result3')">⎘</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title green">Common Reference Table</div>
+        <div style="overflow-x:auto;">
+          <table style="width:100%;border-collapse:collapse;font-size:12px;">
+            <thead><tr style="border-bottom:1px solid var(--border2);">
+              <th style="text-align:left;padding:6px 10px;color:var(--text-dim);font-family:'Syne',sans-serif;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;">CIDR</th>
+              <th style="text-align:left;padding:6px 10px;color:var(--text-dim);font-family:'Syne',sans-serif;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;">Subnet Mask</th>
+              <th style="text-align:left;padding:6px 10px;color:var(--text-dim);font-family:'Syne',sans-serif;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;">Wildcard Mask</th>
+              <th style="text-align:left;padding:6px 10px;color:var(--text-dim);font-family:'Syne',sans-serif;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;">Hosts</th>
+            </tr></thead>
+            <tbody id="wc-ref-table"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- IP RANGE EXPANDER -->
+    <div id="page-ip_range" class="page">
+      <div class="page-header">
+        <div class="page-header-left">
+          <div class="page-title">IP Range Expander</div>
+          <div class="page-desc">Enter an IP range and get every address listed — ready for bulk Checkpoint object creation.</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Input</div>
+        <div class="form-grid form-grid-2">
+          <div class="field"><label>Start IP</label><input type="text" id="ir-start" placeholder="10.0.0.1" oninput="expandRange()"></div>
+          <div class="field"><label>End IP</label><input type="text" id="ir-end" placeholder="10.0.0.50" oninput="expandRange()"></div>
+        </div>
+        <div style="margin-top:10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+          <label style="text-transform:none;letter-spacing:0;font-size:12px;color:var(--text);display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" id="ir-exclude-net" onchange="expandRange()"> Exclude network address</label>
+          <label style="text-transform:none;letter-spacing:0;font-size:12px;color:var(--text);display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" id="ir-exclude-bcast" onchange="expandRange()"> Exclude broadcast address</label>
+        </div>
+      </div>
+      <div class="card" id="ir-results" style="display:none;">
+        <div class="card-title" style="display:flex;align-items:center;justify-content:space-between;">
+          <span>Expanded IPs <span class="card-count" id="ir-count">0</span></span>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-success btn-sm" onclick="copyIpRange()">⎘ Copy All</button>
+            <button class="btn btn-primary btn-sm" onclick="downloadIpRange()">↓ Download</button>
+          </div>
+        </div>
+        <div id="ir-summary" style="font-size:11px;color:var(--text-dim);margin-bottom:10px;"></div>
+        <div id="ir-output" style="background:var(--output-bg);border:1px solid var(--border);border-radius:3px;padding:12px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--output-text);max-height:320px;overflow-y:auto;white-space:pre;line-height:1.8;"></div>
+      </div>
+    </div>
+
+    <!-- NAT RULE BUILDER -->
+    <div id="page-nat_builder" class="page">
+      <div class="page-header">
+        <div class="page-header-left">
+          <div class="page-title">NAT Rule Builder</div>
+          <div class="page-desc">Generate <code>add nat-rule</code> commands for Checkpoint hide NAT and static NAT policies.</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">NAT Rule Settings</div>
+        <div class="form-grid form-grid-2">
+          <div class="field"><label>Package Name</label><input type="text" id="nat-pkg" placeholder="Standard" value="Standard"></div>
+          <div class="field"><label>NAT Type</label><select id="nat-type" onchange="toggleNatFields()">
+            <option value="hide">Hide NAT (Many-to-One)</option>
+            <option value="static">Static NAT (One-to-One)</option>
+          </select></div>
+          <div class="field"><label>Position</label><select id="nat-pos">
+            <option value="top">Top</option>
+            <option value="bottom">Bottom</option>
+          </select></div>
+          <div class="field"><label>Comments</label><input type="text" id="nat-comments" placeholder="Auto-generated NAT rule"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Original (Before NAT)</div>
+        <div class="form-grid form-grid-2">
+          <div class="field"><label>Source Object</label><input type="text" id="nat-orig-src" placeholder="Net_10.0.0.0_24"></div>
+          <div class="field"><label>Destination Object</label><input type="text" id="nat-orig-dst" placeholder="Any" value="Any"></div>
+          <div class="field"><label>Service</label><input type="text" id="nat-orig-svc" placeholder="Any" value="Any"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Translated (After NAT)</div>
+        <div class="form-grid form-grid-2">
+          <div class="field"><label>Translated Source</label><input type="text" id="nat-trans-src" placeholder="GW-External-IP or object name"></div>
+          <div class="field" id="nat-trans-dst-field"><label>Translated Destination</label><input type="text" id="nat-trans-dst" placeholder="Original (leave blank = unchanged)" ></div>
+          <div class="field"><label>Translated Service</label><input type="text" id="nat-trans-svc" placeholder="Original (leave blank = unchanged)"></div>
+          <div class="field" id="nat-method-field"><label>NAT Method</label><select id="nat-method">
+            <option value="hide">Hide</option>
+            <option value="static">Static</option>
+          </select></div>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-success" onclick="generateNATRule()">▶ Generate Command</button>
+        <button class="btn btn-ghost" onclick="copyOutput('nat-output')">⎘ Copy</button>
+      </div>
+      <div class="output-container">
+        <div class="output-header">
+          <div class="output-header-left"><div class="output-dots"><div class="output-dot"></div><div class="output-dot"></div><div class="output-dot"></div></div><span class="output-title">Generated NAT Rule</span></div>
+          <span class="output-line-count" id="nat-linecount"></span>
+        </div>
+        <div class="output-body" id="nat-output"></div>
+      </div>
+    </div>
+
+    <!-- CISCO ACL BUILDER -->
+    <div id="page-cisco_acl" class="page">
+      <div class="page-header">
+        <div class="page-header-left">
+          <div class="page-title">Cisco ACL Builder</div>
+          <div class="page-desc">Build standard and extended named ACLs with permit/deny rules and wildcard masks.</div>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="clearACL()">✕ Clear All</button>
+      </div>
+      <div class="card">
+        <div class="card-title">ACL Settings</div>
+        <div class="form-grid form-grid-3">
+          <div class="field"><label>ACL Name</label><input type="text" id="acl-name" placeholder="INBOUND_FILTER"></div>
+          <div class="field"><label>ACL Type</label><select id="acl-type">
+            <option value="extended">Extended (recommended)</option>
+            <option value="standard">Standard</option>
+          </select></div>
+          <div class="field"><label>Direction Note</label><input type="text" id="acl-dir" placeholder="e.g. Applied inbound on Gi0/1"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title cisco">ACL Rules <span class="card-count" id="acl-rule-count">0</span></div>
+        <div id="acl-entries"></div>
+        <div class="btn-row">
+          <button class="btn btn-warn btn-sm" onclick="addACLEntry('permit')">+ Add Permit</button>
+          <button class="btn btn-danger btn-sm" onclick="addACLEntry('deny')">+ Add Deny</button>
+          <button class="btn btn-ghost btn-sm" onclick="addACLEntry('remark')">+ Add Remark</button>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-success" onclick="generateACL()">▶ Generate ACL</button>
+        <button class="btn btn-ghost" onclick="copyOutput('acl-output')">⎘ Copy</button>
+      </div>
+      <div class="output-container">
+        <div class="output-header">
+          <div class="output-header-left"><div class="output-dots"><div class="output-dot"></div><div class="output-dot"></div><div class="output-dot"></div></div><span class="output-title">Generated ACL</span></div>
+          <span class="output-line-count" id="acl-linecount"></span>
+        </div>
+        <div class="output-body" id="acl-output"></div>
+      </div>
+    </div>
+
+    <!-- CISCO HSRP / VRRP -->
+    <div id="page-cisco_hsrp" class="page">
+      <div class="page-header">
+        <div class="page-header-left">
+          <div class="page-title">HSRP / VRRP Config</div>
+          <div class="page-desc">Generate first-hop redundancy configs for Cisco IOS active/standby gateway pairs.</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Protocol & Interface</div>
+        <div class="form-grid form-grid-3">
+          <div class="field"><label>Protocol</label><select id="fhrp-proto">
+            <option value="hsrp">HSRP (Hot Standby Router Protocol)</option>
+            <option value="vrrp">VRRP (Virtual Router Redundancy)</option>
+          </select></div>
+          <div class="field"><label>Interface</label><input type="text" id="fhrp-iface" placeholder="GigabitEthernet0/1"></div>
+          <div class="field"><label>Group Number</label><input type="text" id="fhrp-group" placeholder="1"></div>
+          <div class="field"><label>Virtual IP (VIP)</label><input type="text" id="fhrp-vip" placeholder="10.0.0.1"></div>
+          <div class="field"><label>Version</label><select id="fhrp-ver">
+            <option value="2">Version 2 (recommended)</option>
+            <option value="1">Version 1</option>
+          </select></div>
+          <div class="field"><label>Authentication Key (optional)</label><input type="text" id="fhrp-auth" placeholder="SecretKey123"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Active Router</div>
+        <div class="form-grid form-grid-3">
+          <div class="field"><label>Interface IP</label><input type="text" id="fhrp-active-ip" placeholder="10.0.0.2"></div>
+          <div class="field"><label>Subnet Mask</label><input type="text" id="fhrp-active-mask" placeholder="255.255.255.0"></div>
+          <div class="field"><label>Priority</label><input type="text" id="fhrp-active-pri" placeholder="110"></div>
+          <div class="field"><label>Preempt</label><select id="fhrp-active-preempt"><option value="yes">Yes</option><option value="no">No</option></select></div>
+          <div class="field"><label>Preempt Delay (sec)</label><input type="text" id="fhrp-active-delay" placeholder="10"></div>
+          <div class="field"><label>Hostname</label><input type="text" id="fhrp-active-host" placeholder="RTR-ACTIVE"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Standby Router</div>
+        <div class="form-grid form-grid-3">
+          <div class="field"><label>Interface IP</label><input type="text" id="fhrp-standby-ip" placeholder="10.0.0.3"></div>
+          <div class="field"><label>Subnet Mask</label><input type="text" id="fhrp-standby-mask" placeholder="255.255.255.0"></div>
+          <div class="field"><label>Priority</label><input type="text" id="fhrp-standby-pri" placeholder="100"></div>
+          <div class="field"><label>Preempt</label><select id="fhrp-standby-preempt"><option value="no">No</option><option value="yes">Yes</option></select></div>
+          <div class="field"><label>Preempt Delay (sec)</label><input type="text" id="fhrp-standby-delay" placeholder="10"></div>
+          <div class="field"><label>Hostname</label><input type="text" id="fhrp-standby-host" placeholder="RTR-STANDBY"></div>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-success" onclick="generateFHRP()">▶ Generate Config</button>
+        <button class="btn btn-ghost" onclick="copyOutput('fhrp-output')">⎘ Copy</button>
+      </div>
+      <div class="output-container">
+        <div class="output-header">
+          <div class="output-header-left"><div class="output-dots"><div class="output-dot"></div><div class="output-dot"></div><div class="output-dot"></div></div><span class="output-title cisco">Generated HSRP / VRRP Config</span></div>
+          <span class="output-line-count" id="fhrp-linecount"></span>
+        </div>
+        <div class="output-body" id="fhrp-output"></div>
+      </div>
+    </div>
+
+    <!-- SIC RESET -->
+    <div id="page-sic_reset" class="page">
+      <div class="page-header">
+        <div class="page-header-left">
+          <div class="page-title">Checkpoint SIC Reset</div>
+          <div class="page-desc">Generate SIC reset and re-initialise commands for gateways and management servers.</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Gateway / Module Details</div>
+        <div class="form-grid form-grid-2">
+          <div class="field"><label>Gateway Name / Object</label><input type="text" id="sic-gw-name" placeholder="GW-SITE-01"></div>
+          <div class="field"><label>Gateway IP</label><input type="text" id="sic-gw-ip" placeholder="10.0.0.254"></div>
+          <div class="field"><label>New SIC Key</label><input type="text" id="sic-key" placeholder="Enter activation key (min 4 chars)"></div>
+          <div class="field"><label>Module Type</label><select id="sic-type">
+            <option value="gateway">Gateway / Cluster Member</option>
+            <option value="mgmt">Management Server</option>
+            <option value="mds">MDS / Domain Server</option>
+          </select></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Operations</div>
+        <div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:4px;">
+          <label style="text-transform:none;letter-spacing:0;font-size:12px;color:var(--text);display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" id="sic-op-reset" checked> Reset SIC on Gateway (Expert CLI)</label>
+          <label style="text-transform:none;letter-spacing:0;font-size:12px;color:var(--text);display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" id="sic-op-mgmt" checked> Re-init from SmartConsole (mgmt_cli)</label>
+          <label style="text-transform:none;letter-spacing:0;font-size:12px;color:var(--text);display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" id="sic-op-verify"> Verify SIC status after</label>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-success" onclick="generateSICReset()">▶ Generate Commands</button>
+        <button class="btn btn-ghost" onclick="copyOutput('sic-output')">⎘ Copy</button>
+      </div>
+      <div class="output-container">
+        <div class="output-header">
+          <div class="output-header-left"><div class="output-dots"><div class="output-dot"></div><div class="output-dot"></div><div class="output-dot"></div></div><span class="output-title">SIC Reset Commands</span></div>
+          <span class="output-line-count" id="sic-linecount"></span>
+        </div>
+        <div class="output-body" id="sic-output"></div>
+      </div>
+    </div>
+
+    <!-- CHANGE REQUEST TEMPLATE -->
+    <div id="page-change_request" class="page">
+      <div class="page-header">
+        <div class="page-header-left">
+          <div class="page-title">Change Request Template</div>
+          <div class="page-desc">Fill in a structured network change request — export as plain text or copy to clipboard.</div>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="clearCR()">✕ Clear</button>
+      </div>
+      <div class="card">
+        <div class="card-title">Change Details</div>
+        <div class="form-grid form-grid-2">
+          <div class="field"><label>CR Number / Ticket</label><input type="text" id="cr-num" placeholder="CHG0012345"></div>
+          <div class="field"><label>Change Title</label><input type="text" id="cr-title" placeholder="Firewall rule addition for App X"></div>
+          <div class="field"><label>Requestor</label><input type="text" id="cr-requestor" placeholder="John Smith"></div>
+          <div class="field"><label>Implementor</label><input type="text" id="cr-impl" placeholder="Jitendra Vasani"></div>
+          <div class="field"><label>Planned Start</label><input type="text" id="cr-start" placeholder="2025-06-01 22:00"></div>
+          <div class="field"><label>Planned End</label><input type="text" id="cr-end" placeholder="2025-06-01 23:00"></div>
+          <div class="field"><label>Change Type</label><select id="cr-type">
+            <option>Standard</option><option>Normal</option><option>Emergency</option><option>Pre-Approved</option>
+          </select></div>
+          <div class="field"><label>Risk</label><select id="cr-risk">
+            <option>Low</option><option>Medium</option><option>High</option><option>Critical</option>
+          </select></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Scope & Impact</div>
+        <div class="form-grid">
+          <div class="field full"><label>Affected Devices / Systems</label><input type="text" id="cr-devices" placeholder="GW-SITE-01, SW-CORE-01"></div>
+          <div class="field full"><label>Business Impact</label><textarea id="cr-impact" rows="2" placeholder="Describe impact during change window..." style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:3px;padding:8px;color:var(--text);font-size:12px;resize:vertical;"></textarea></div>
+          <div class="field full"><label>Change Description</label><textarea id="cr-desc" rows="3" placeholder="Detailed description of what will be done..." style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:3px;padding:8px;color:var(--text);font-size:12px;resize:vertical;"></textarea></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Implementation Steps</div>
+        <div id="cr-steps-list"></div>
+        <div class="btn-row"><button class="btn btn-primary btn-sm" onclick="addCRStep()">+ Add Step</button></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Rollback Plan</div>
+        <div class="form-grid">
+          <div class="field full"><textarea id="cr-rollback" rows="3" placeholder="Steps to undo the change if something goes wrong..." style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:3px;padding:8px;color:var(--text);font-size:12px;resize:vertical;"></textarea></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Testing & Validation</div>
+        <div class="form-grid">
+          <div class="field full"><textarea id="cr-test" rows="2" placeholder="How will success be validated after the change..." style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:3px;padding:8px;color:var(--text);font-size:12px;resize:vertical;"></textarea></div>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-success" onclick="generateCR()">▶ Generate Template</button>
+        <button class="btn btn-ghost" onclick="copyOutput('cr-output')">⎘ Copy</button>
+        <button class="btn btn-primary" onclick="downloadCR()">↓ Download .txt</button>
+      </div>
+      <div class="output-container">
+        <div class="output-header">
+          <div class="output-header-left"><div class="output-dots"><div class="output-dot"></div><div class="output-dot"></div><div class="output-dot"></div></div><span class="output-title">Change Request</span></div>
+          <span class="output-line-count" id="cr-linecount"></span>
+        </div>
+        <div class="output-body" id="cr-output"></div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+'use strict';
+
+// ══════════════════════════════════════════════
+// CONSTANTS
+// ══════════════════════════════════════════════
+const CP_COLORS = ['aquamarine','black','blue','cadetblue','burlywood','cyan','darkgreen','khaki','orchid','darkorange','darkseagreen','pink','turquoise','darkblue','firebrick','brown','forestgreen','gold','darkgoldenrod','gray','darkgray','lightgreen','lemonchiffon','coral','seagreen','skyblue','magenta','purple','slateblue','violetred','navyblue','olive','orange','red','sienna','yellow'];
+
+function colorOptions(selected = 'black') {
+  return CP_COLORS.map(c => `<option value="${c}"${c === selected ? ' selected' : ''}>${c.charAt(0).toUpperCase() + c.slice(1)}</option>`).join('');
+}
+
+// Populate gateway color selects (static ones that exist at load time)
+document.addEventListener('DOMContentLoaded', () => {
+  ['sgw-color','cgw-color'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = colorOptions('orange');
+  });
+  initPages();
+});
+
+// ══════════════════════════════════════════════
+// OPTIONAL FIELD TOGGLE
+// ══════════════════════════════════════════════
+function toggleOptionalField(wrapId, btnId) {
+  const wrap = document.getElementById(wrapId);
+  const btn = document.getElementById(btnId);
+  const isHidden = wrap.style.display === 'none';
+  wrap.style.display = isHidden ? 'block' : 'none';
+  btn.textContent = isHidden ? '− Remove Domain' : '+ Add Domain';
+  if (!isHidden) {
+    // Clear value when hiding
+    const input = wrap.querySelector('input');
+    if (input) input.value = '';
+  }
+}
+
+// ══════════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════════
+function navigate(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const el = document.getElementById('page-' + page);
+  if (el) el.classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => {
+    if (n.getAttribute('onclick') === `navigate('${page}')`) n.classList.add('active');
+  });
+  window.scrollTo(0, 0);
+}
+
+// ══════════════════════════════════════════════
+// TOAST
+// ══════════════════════════════════════════════
+function toast(msg, type = 'ok') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = type === 'error' ? 'error show' : 'show';
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), 2400);
+}
+
+// ══════════════════════════════════════════════
+// COPY & DOWNLOAD
+// ══════════════════════════════════════════════
+function copyOutput(id) {
+  const text = document.getElementById(id).textContent;
+  if (!text.trim()) { toast('Nothing to copy', 'error'); return; }
+  navigator.clipboard.writeText(text).then(() => toast('Copied to clipboard!')).catch(() => toast('Copy failed', 'error'));
+}
+
+function downloadOutput(outputId, filename) {
+  const text = document.getElementById(outputId).textContent;
+  if (!text.trim()) { toast('Nothing to download', 'error'); return; }
+  triggerDownload(text, filename);
+}
+
+function triggerDownload(text, filename) {
+  const a = document.createElement('a');
+  a.href = 'data:text/plain;charset=utf-8,' + encodeURIComponent(text);
+  a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+}
+
+// ══════════════════════════════════════════════
+// OUTPUT HELPERS
+// ══════════════════════════════════════════════
+function setOutput(outputId, text, lineCountId) {
+  const el = document.getElementById(outputId);
+  el.textContent = text;
+  if (lineCountId) {
+    const lines = text ? text.split('\n').length : 0;
+    const lc = document.getElementById(lineCountId);
+    if (lc) lc.textContent = lines ? `${lines} line${lines !== 1 ? 's' : ''}` : '';
+  }
+  // Scroll output into view
+  el.closest('.output-container').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// ══════════════════════════════════════════════
+// ENTRY COUNT BADGES
+// ══════════════════════════════════════════════
+function updateCount(containerId, badgeId) {
+  const badge = document.getElementById(badgeId);
+  if (!badge) return;
+  const count = document.getElementById(containerId)?.querySelectorAll(':scope > .entry-block').length || 0;
+  badge.textContent = count;
+}
+
+// ══════════════════════════════════════════════
+// CLEAR ENTRIES
+// ══════════════════════════════════════════════
+function clearEntries(containerId) {
+  document.getElementById(containerId).innerHTML = '';
+}
+
+// ══════════════════════════════════════════════
+// PORTAL AUTO-FILL
+// ══════════════════════════════════════════════
+function updatePortal(ipId, portalId) {
+  const ip = document.getElementById(ipId).value.trim();
+  document.getElementById(portalId).value = ip ? `https://${ip}:4434` : '';
+}
+
+// ══════════════════════════════════════════════
+// HOST ENTRY (shared by create_host and bulk)
+// ══════════════════════════════════════════════
+function hostEntryHTML(containerId, sc = '', z = '', h = '', ip = '', col = 'black') {
+  const n = (document.getElementById(containerId)?.querySelectorAll('.entry-block').length || 0) + 1;
+  return `<div class="entry-block">
+    <div class="entry-header">
+      <span class="entry-num">Entry #${n}</span>
+      <button class="entry-remove" onclick="removeEntry(this,'${containerId}',null)" title="Remove">✕</button>
+    </div>
+    <div class="form-grid" style="grid-template-columns:1fr 1fr 1fr 1fr 1fr;">
+      <div class="field"><label>Site Code</label><input type="text" class="h-sc" value="${sc}" placeholder="EU"></div>
+      <div class="field"><label>Zone</label><input type="text" class="h-zone" value="${z}" placeholder="DMZ"></div>
+      <div class="field"><label>Hostname</label><input type="text" class="h-host" value="${h}" placeholder="SRV-WEB-01"></div>
+      <div class="field"><label>IP Address</label><input type="text" class="h-ip" value="${ip}" placeholder="10.0.0.100"></div>
+      <div class="field"><label>Color</label><select class="h-color">${colorOptions(col)}</select></div>
+    </div>
+  </div>`;
+}
+
+function removeEntry(btn, containerId, countId) {
+  btn.closest('.entry-block').remove();
+  if (countId) updateCount(containerId, countId);
+  // Renumber
+  document.getElementById(containerId)?.querySelectorAll('.entry-num').forEach((el, i) => {
+    el.textContent = `Entry #${i + 1}`;
+  });
+}
+
+function addHostEntry() {
+  document.getElementById('host-entries').insertAdjacentHTML('beforeend', hostEntryHTML('host-entries'));
+  updateCount('host-entries', 'host-count');
+}
+
+function addBulkHostEntry(sc = '', z = '', h = '', ip = '', col = 'black') {
+  document.getElementById('bulk-host-entries').insertAdjacentHTML('beforeend', hostEntryHTML('bulk-host-entries', sc, z, h, ip, col));
+  updateCount('bulk-host-entries', 'bulk-host-count');
+}
+
+function handleBulkCSV(event) {
+  const file = event.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const lines = e.target.result.replace(/\r/g, '').split('\n');
+    let added = 0;
+    for (let i = 1; i < lines.length; i++) {
+      const l = lines[i].trim(); if (!l) continue;
+      // Handle quoted CSV values
+      const parts = l.split(',').map(s => s.trim().replace(/^"|"$/g, ''));
+      const [sc, z, h, ip, col] = parts;
+      addBulkHostEntry(sc || '', z || '', h || '', ip || '', col || 'black');
+      added++;
+    }
+    toast(`Imported ${added} entr${added !== 1 ? 'ies' : 'y'} from CSV`);
+  };
+  reader.readAsText(file);
+  event.target.value = ''; // reset so same file can be re-imported
+}
+
+function generateHostOutput() {
+  const entries = document.querySelectorAll('#host-entries .entry-block');
+  if (!entries.length) { toast('No entries to generate', 'error'); return; }
+  const cmds = [...entries].map(e => {
+    const sc  = e.querySelector('.h-sc').value.trim().toUpperCase();
+    const z   = e.querySelector('.h-zone').value.trim().toUpperCase();
+    const h   = e.querySelector('.h-host').value.trim().toUpperCase();
+    const ip  = e.querySelector('.h-ip').value.trim();
+    const col = e.querySelector('.h-color').value;
+    return `add host name "${sc}_${z}_${h}_${ip}" ip-address "${ip}" color ${col}`;
+  });
+  setOutput('host-output', cmds.join('\n'), 'host-linecount');
+}
+
+function generateBulkHostOutput() {
+  const entries = document.querySelectorAll('#bulk-host-entries .entry-block');
+  if (!entries.length) { toast('No entries to generate', 'error'); return; }
+  const cmds = [...entries].map(e => {
+    const sc  = e.querySelector('.h-sc').value.trim().toUpperCase();
+    const z   = e.querySelector('.h-zone').value.trim().toUpperCase();
+    const h   = e.querySelector('.h-host').value.trim().toUpperCase();
+    const ip  = e.querySelector('.h-ip').value.trim();
+    const col = e.querySelector('.h-color').value;
+    return `add host name "${sc}_${z}_${h}_${ip}" ip-address "${ip}" color ${col}`;
+  });
+  setOutput('bulk-host-output', cmds.join('\n'), 'bulk-host-linecount');
+}
+
+// ══════════════════════════════════════════════
+// NETWORK OBJECTS
+// ══════════════════════════════════════════════
+function addNetworkEntry() {
+  const n = (document.getElementById('network-entries')?.querySelectorAll('.entry-block').length || 0) + 1;
+  document.getElementById('network-entries').insertAdjacentHTML('beforeend', `
+    <div class="entry-block">
+      <div class="entry-header">
+        <span class="entry-num">Entry #${n}</span>
+        <button class="entry-remove" onclick="removeEntry(this,'network-entries','network-count')" title="Remove">✕</button>
+      </div>
+      <div class="form-grid" style="grid-template-columns:1fr 1fr 1fr 1fr 1fr 1fr;">
+        <div class="field"><label>Site Code</label><input type="text" class="n-sc" placeholder="EU"></div>
+        <div class="field"><label>Zone</label><input type="text" class="n-zone" placeholder="INT"></div>
+        <div class="field"><label>VLAN Name</label><input type="text" class="n-vlan" placeholder="MGMT"></div>
+        <div class="field"><label>Subnet</label><input type="text" class="n-subnet" placeholder="10.0.0.0"></div>
+        <div class="field"><label>Mask Length</label><input type="text" class="n-mask" placeholder="24"></div>
+        <div class="field"><label>Color</label><select class="n-color">${colorOptions()}</select></div>
+      </div>
+    </div>`);
+  updateCount('network-entries', 'network-count');
+}
+
+function generateNetworkOutput() {
+  const entries = document.querySelectorAll('#network-entries .entry-block');
+  if (!entries.length) { toast('No entries to generate', 'error'); return; }
+  const cmds = [...entries].map(e => {
+    const sc   = e.querySelector('.n-sc').value.trim().toUpperCase();
+    const z    = e.querySelector('.n-zone').value.trim().toUpperCase();
+    const vlan = e.querySelector('.n-vlan').value.trim().toUpperCase();
+    const sub  = e.querySelector('.n-subnet').value.trim();
+    const mask = e.querySelector('.n-mask').value.trim();
+    const col  = e.querySelector('.n-color').value;
+    return `add network name "${sc}_${z}_${vlan}_${sub}_${mask}" subnet "${sub}" mask-length ${mask} color ${col}`;
+  });
+  setOutput('network-output', cmds.join('\n'), 'network-linecount');
+}
+
+// ══════════════════════════════════════════════
+// NETWORK GROUPS
+// ══════════════════════════════════════════════
+function addGroupEntry() {
+  const n = (document.getElementById('group-entries')?.querySelectorAll(':scope > .entry-block').length || 0) + 1;
+  document.getElementById('group-entries').insertAdjacentHTML('beforeend', `
+    <div class="entry-block">
+      <div class="entry-header">
+        <span class="entry-num">Group #${n}</span>
+        <button class="entry-remove" onclick="removeEntry(this,'group-entries','group-count')" title="Remove">✕</button>
+      </div>
+      <div class="form-grid form-grid-2" style="margin-bottom:10px;">
+        <div class="field"><label>Site Code</label><input type="text" class="g-sc" placeholder="EU"></div>
+        <div class="field"><label>Zone</label><input type="text" class="g-zone" placeholder="INT"></div>
+        <div class="field"><label>Group Name</label><input type="text" class="g-name" placeholder="SERVERS"></div>
+        <div class="field"><label>Color</label><select class="g-color">${colorOptions()}</select></div>
+      </div>
+      <div style="font-size:10px;color:var(--text-dim);margin-bottom:8px;font-family:'Syne',sans-serif;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;">Members</div>
+      <div class="g-members-grid" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+        <input type="text" class="g-member" placeholder="Member 1" style="background:var(--surface);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:3px;font-family:'JetBrains Mono',monospace;font-size:12px;outline:none;">
+        <input type="text" class="g-member" placeholder="Member 2" style="background:var(--surface);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:3px;font-family:'JetBrains Mono',monospace;font-size:12px;outline:none;">
+        <input type="text" class="g-member" placeholder="Member 3" style="background:var(--surface);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:3px;font-family:'JetBrains Mono',monospace;font-size:12px;outline:none;">
+      </div>
+      <div style="margin-top:8px;">
+        <button class="btn btn-ghost btn-sm" onclick="addMemberToGroup(this)">+ Add Member</button>
+      </div>
+    </div>`);
+  updateCount('group-entries', 'group-count');
+}
+
+function addMemberToGroup(btn) {
+  const grid = btn.closest('.entry-block').querySelector('.g-members-grid');
+  const n = grid.querySelectorAll('.g-member').length + 1;
+  grid.insertAdjacentHTML('beforeend', `<input type="text" class="g-member" placeholder="Member ${n}" style="background:var(--surface);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:3px;font-family:'JetBrains Mono',monospace;font-size:12px;outline:none;">`);
+}
+
+function generateGroupOutput() {
+  const entries = document.querySelectorAll('#group-entries .entry-block');
+  if (!entries.length) { toast('No entries to generate', 'error'); return; }
+  const cmds = [...entries].map(e => {
+    const sc      = e.querySelector('.g-sc').value.trim().toUpperCase();
+    const z       = e.querySelector('.g-zone').value.trim().toUpperCase();
+    const name    = e.querySelector('.g-name').value.trim().toUpperCase();
+    const col     = e.querySelector('.g-color').value;
+    const members = [...e.querySelectorAll('.g-member')].map(m => m.value.trim()).filter(Boolean);
+    let cmd = `add group name "${sc}_${z}_${name}"`;
+    members.forEach((m, i) => cmd += ` members.${i + 1} "${m}"`);
+    cmd += ` color ${col}`;
+    return cmd;
+  });
+  setOutput('group-output', cmds.join('\n'), 'group-linecount');
+}
+
+// ══════════════════════════════════════════════
+// GAIA INTERFACES
+// ══════════════════════════════════════════════
+function gaiaIfaceCountId(containerId) {
+  return containerId === 'gaia-iface-entries' ? 'gaia-iface-count' : 'gaia-embedded-count';
+}
+
+function addGaiaIfaceEntry(containerId) {
+  const n = (document.getElementById(containerId)?.querySelectorAll('.entry-block').length || 0) + 1;
+  document.getElementById(containerId).insertAdjacentHTML('beforeend', `
+    <div class="entry-block">
+      <div class="entry-header">
+        <span class="entry-num">Interface #${n}</span>
+        <button class="entry-remove" onclick="removeEntry(this,'${containerId}','${gaiaIfaceCountId(containerId)}')" title="Remove">✕</button>
+      </div>
+      <div class="form-grid form-grid-3">
+        <div class="field"><label>Interface</label><input type="text" class="gi-iface" placeholder="bond1"></div>
+        <div class="field"><label>VLAN ID</label><input type="text" class="gi-vlan" placeholder="100"></div>
+        <div class="field"><label>Comment / Description</label><input type="text" class="gi-comment"></div>
+        <div class="field"><label>IP Address</label><input type="text" class="gi-ip" placeholder="10.0.100.1"></div>
+        <div class="field"><label>Mask Length</label><input type="text" class="gi-mask" placeholder="24"></div>
+      </div>
+    </div>`);
+  updateCount(containerId, gaiaIfaceCountId(containerId));
+}
+
+function generateGaiaIfaceOutput(containerId, outputId, useDescription) {
+  const entries = document.querySelectorAll(`#${containerId} .entry-block`);
+  if (!entries.length) { toast('No entries to generate', 'error'); return; }
+  const commentKey = useDescription ? 'description' : 'comments';
+  const cmds = [];
+  entries.forEach(e => {
+    const iface   = e.querySelector('.gi-iface').value.trim();
+    const vlan    = e.querySelector('.gi-vlan').value.trim();
+    const comment = e.querySelector('.gi-comment').value.trim();
+    const ip      = e.querySelector('.gi-ip').value.trim();
+    const mask    = e.querySelector('.gi-mask').value.trim();
+    cmds.push(`add interface ${iface} vlan ${vlan}`);
+    cmds.push(`set interface ${iface}.${vlan} ${commentKey} "${comment}"`);
+    cmds.push(`set interface ${iface}.${vlan} ipv4-address ${ip} mask-length ${mask}`);
+  });
+  const lcId = containerId === 'gaia-iface-entries' ? 'gaia-iface-linecount' : 'gaia-embedded-linecount';
+  setOutput(outputId, cmds.join('\n'), lcId);
+}
+
+// ══════════════════════════════════════════════
+// SIMPLE GATEWAY
+// ══════════════════════════════════════════════
+function addGWIface(prefix) {
+  const containerId = `${prefix}-iface-entries`;
+  const countId = `${prefix}-iface-count`;
+  const n = (document.getElementById(containerId)?.querySelectorAll('.entry-block').length || 0) + 1;
+  document.getElementById(containerId).insertAdjacentHTML('beforeend', `
+    <div class="entry-block">
+      <div class="entry-header">
+        <span class="entry-num">Interface #${n}</span>
+        <button class="entry-remove" onclick="removeEntry(this,'${containerId}','${countId}')" title="Remove">✕</button>
+      </div>
+      <div class="form-grid form-grid-3">
+        <div class="field"><label>Name</label><input type="text" class="gwiface-name" placeholder="eth1"></div>
+        <div class="field"><label>Comments</label><input type="text" class="gwiface-comments"></div>
+        <div class="field"><label>IPv4 Address</label><input type="text" class="gwiface-ip" placeholder="10.0.0.1"></div>
+        <div class="field"><label>Network Mask</label><input type="text" class="gwiface-mask" placeholder="255.255.255.0"></div>
+        <div class="field"><label>Anti-Spoofing</label><select class="gwiface-antispoof"><option value="true">TRUE</option><option value="false">FALSE</option></select></div>
+        <div class="field"><label>Topology</label><select class="gwiface-topo"><option value="INTERNAL">INTERNAL</option><option value="EXTERNAL">EXTERNAL</option></select></div>
+      </div>
+    </div>`);
+  updateCount(containerId, countId);
+}
+
+function generateSGWOutput() {
+  const g = id => document.getElementById(id).value.trim();
+  let out = `add simple-gateway`;
+  out += ` name "${g('sgw-name')}"`;
+  out += ` color ${g('sgw-color')}`;
+  out += ` ip-address "${g('sgw-ip')}"`;
+  out += ` hardware "${g('sgw-hw')}"`;
+  out += ` version "${g('sgw-ver')}"`;
+  out += ` comments "${g('sgw-comments')}"`;
+  out += ` firewall ${g('sgw-fw')}`;
+  out += ` ips ${g('sgw-ips')}`;
+  out += ` anti-bot ${g('sgw-ab')}`;
+  out += ` anti-virus ${g('sgw-av')}`;
+  out += ` vpn ${g('sgw-vpn')}`;
+  out += ` application-control ${g('sgw-appc')}`;
+  out += ` url-filtering ${g('sgw-urlf')}`;
+  out += ` content-awareness ${g('sgw-ctnt')}`;
+  out += ` threat-emulation ${g('sgw-te')}`;
+  out += ` identity-awareness ${g('sgw-ia')}`;
+  out += ` https-inspection.enabled ${g('sgw-https')}`;
+  out += ` platform-portal-settings.portal-web-settings.main-url "${g('sgw-portal')}"`;
+  out += ` platform-portal-settings.portal-web-settings.ip-address "${g('sgw-ip')}"`;
+  out += ` nat-settings.hide-internal-interfaces ${g('sgw-nat')}`;
+  out += ` logs-settings.forward-logs-to-log-server ${g('sgw-fwd')}`;
+  out += ` send-logs-to-server "${g('sgw-log1')}"`;
+  out += ` send-logs-to-backup-server.1 "${g('sgw-log2')}"`;
+  out += ` send-logs-to-backup-server.2 "${g('sgw-log3')}"`;
+  out += ` fetch-policy "${g('sgw-policy')}"`;
+  out += ` advanced-settings.connection-persistence "${g('sgw-persist')}"`;
+  document.querySelectorAll('#sgw-iface-entries .entry-block').forEach((e, i) => {
+    const n = i + 1;
+    const topo = e.querySelector('.gwiface-topo').value;
+    out += ` interfaces.${n}.name "${e.querySelector('.gwiface-name').value.trim()}"`;
+    out += ` interfaces.${n}.comments "${e.querySelector('.gwiface-comments').value.trim()}"`;
+    out += ` interfaces.${n}.ipv4-address "${e.querySelector('.gwiface-ip').value.trim()}"`;
+    out += ` interfaces.${n}.ipv4-network-mask "${e.querySelector('.gwiface-mask').value.trim()}"`;
+    out += ` interfaces.${n}.anti-spoofing ${e.querySelector('.gwiface-antispoof').value}`;
+    out += ` interfaces.${n}.topology "${topo}"`;
+    if (topo === 'INTERNAL') out += ` interfaces.${n}.topology-settings.ip-address-behind-this-interface "network defined by the interface ip and net mask"`;
+  });
+  setOutput('sgw-output', out);
+}
+
+// ══════════════════════════════════════════════
+// CLUSTER GATEWAY — separate counters from SGW
+// ══════════════════════════════════════════════
+function addClusterIface() {
+  const containerId = 'cgw-cluster-ifaces';
+  const countId = 'cgw-ci-count';
+  const n = (document.getElementById(containerId)?.querySelectorAll('.entry-block').length || 0) + 1;
+  document.getElementById(containerId).insertAdjacentHTML('beforeend', `
+    <div class="entry-block">
+      <div class="entry-header">
+        <span class="entry-num">Cluster Interface #${n}</span>
+        <button class="entry-remove" onclick="removeEntry(this,'${containerId}','${countId}')" title="Remove">✕</button>
+      </div>
+      <div class="form-grid form-grid-3">
+        <div class="field"><label>Name</label><input type="text" class="cgw-ci-name" placeholder="eth1"></div>
+        <div class="field"><label>Comments</label><input type="text" class="cgw-ci-comments"></div>
+        <div class="field"><label>Interface Type</label>
+          <select class="cgw-ci-type" onchange="toggleCGWIfaceIP(this)">
+            <option value="cluster">cluster</option>
+            <option value="sync">sync</option>
+            <option value="cluster + sync">cluster + sync</option>
+            <option value="private">private</option>
+          </select>
+        </div>
+        <div class="field"><label>Topology</label><select class="cgw-ci-topo"><option value="INTERNAL">INTERNAL</option><option value="EXTERNAL">EXTERNAL</option></select></div>
+        <div class="field cgw-ip-wrap"><label>IP Address</label><input type="text" class="cgw-ci-ip" placeholder="10.0.0.1"></div>
+        <div class="field cgw-mask-wrap"><label>Network Mask</label><input type="text" class="cgw-ci-mask" placeholder="255.255.255.0"></div>
+        <div class="field"><label>Anti-Spoofing</label><select class="cgw-ci-antispoof"><option value="true">TRUE</option><option value="false">FALSE</option></select></div>
+      </div>
+    </div>`);
+  updateCount(containerId, countId);
+}
+
+function toggleCGWIfaceIP(sel) {
+  const block = sel.closest('.entry-block');
+  const isSync = sel.value === 'sync';
+  block.querySelector('.cgw-ci-ip').disabled = isSync;
+  block.querySelector('.cgw-ci-mask').disabled = isSync;
+  block.querySelector('.cgw-ip-wrap').style.opacity = isSync ? '0.4' : '1';
+  block.querySelector('.cgw-mask-wrap').style.opacity = isSync ? '0.4' : '1';
+}
+
+function addMemberIface(containerId, countId, label) {
+  const n = (document.getElementById(containerId)?.querySelectorAll('.entry-block').length || 0) + 1;
+  document.getElementById(containerId).insertAdjacentHTML('beforeend', `
+    <div class="entry-block">
+      <div class="entry-header">
+        <span class="entry-num">${label} · Interface #${n}</span>
+        <button class="entry-remove" onclick="removeEntry(this,'${containerId}','${countId}')" title="Remove">✕</button>
+      </div>
+      <div class="form-grid form-grid-3">
+        <div class="field"><label>Interface Name</label><input type="text" class="mi-name" placeholder="eth1"></div>
+        <div class="field"><label>IP Address</label><input type="text" class="mi-ip" placeholder="10.0.0.2"></div>
+        <div class="field"><label>Network Mask</label><input type="text" class="mi-mask" placeholder="255.255.255.0"></div>
+      </div>
+    </div>`);
+  updateCount(containerId, countId);
+}
+
+function generateCGWOutput() {
+  const g = id => document.getElementById(id).value.trim();
+  let out = `add simple-cluster`;
+  out += ` name "${g('cgw-name')}"`;
+  out += ` color ${g('cgw-color')}`;
+  out += ` ip-address "${g('cgw-ip')}"`;
+  out += ` hardware "${g('cgw-hw')}"`;
+  out += ` version "${g('cgw-ver')}"`;
+  out += ` comments "${g('cgw-comments')}"`;
+  out += ` firewall ${g('cgw-fw')}`;
+  out += ` ips ${g('cgw-ips')}`;
+  out += ` anti-bot ${g('cgw-ab')}`;
+  out += ` anti-virus ${g('cgw-av')}`;
+  out += ` vpn ${g('cgw-vpn')}`;
+  out += ` application-control ${g('cgw-appc')}`;
+  out += ` url-filtering ${g('cgw-urlf')}`;
+  out += ` content-awareness ${g('cgw-ctnt')}`;
+  out += ` threat-emulation ${g('cgw-te')}`;
+  out += ` identity-awareness ${g('cgw-ia')}`;
+  out += ` https-inspection.enabled ${g('cgw-https')}`;
+  out += ` cluster-mode "${g('cgw-mode')}"`;
+  out += ` platform-portal-settings.portal-web-settings.main-url "${g('cgw-portal')}"`;
+  out += ` nat-settings.hide-internal-interfaces ${g('cgw-nat')}`;
+  out += ` send-logs-to-server "${g('cgw-log1')}"`;
+  out += ` send-logs-to-backup-server.1 "${g('cgw-log2')}"`;
+  out += ` send-logs-to-backup-server.2 "${g('cgw-log3')}"`;
+  out += ` fetch-policy "${g('cgw-policy')}"`;
+  out += ` advanced-settings.connection-persistence "${g('cgw-persist')}"`;
+
+  // Member identity must be declared before per-member interface references
+  out += ` members.1.name "${g('cgw-m1name')}" members.1.ip-address "${g('cgw-m1ip')}"`;
+  out += ` members.1.color ${g('cgw-color')}`;
+  out += ` members.2.name "${g('cgw-m2name')}" members.2.ip-address "${g('cgw-m2ip')}"`;
+  out += ` members.2.color ${g('cgw-color')}`;
+
+  document.querySelectorAll('#cgw-cluster-ifaces .entry-block').forEach((e, i) => {
+    const n = i + 1;
+    const type = e.querySelector('.cgw-ci-type').value;
+    const topo = e.querySelector('.cgw-ci-topo').value;
+    out += ` interfaces.${n}.name "${e.querySelector('.cgw-ci-name').value.trim()}"`;
+    out += ` interfaces.${n}.comments "${e.querySelector('.cgw-ci-comments').value.trim()}"`;
+    out += ` interfaces.${n}.interface-type "${type}"`;
+    if (type !== 'sync') {
+      out += ` interfaces.${n}.ip-address "${e.querySelector('.cgw-ci-ip').value.trim()}"`;
+      out += ` interfaces.${n}.network-mask "${e.querySelector('.cgw-ci-mask').value.trim()}"`;
+    }
+    out += ` interfaces.${n}.anti-spoofing ${e.querySelector('.cgw-ci-antispoof').value}`;
+    out += ` interfaces.${n}.topology "${topo}"`;
+    if (topo === 'INTERNAL') out += ` interfaces.${n}.topology-settings.ip-address-behind-this-interface "network defined by the interface ip and net mask"`;
+  });
+
+  document.querySelectorAll('#cgw-m1-ifaces .entry-block').forEach((e, i) => {
+    const n = i + 1;
+    out += ` members.1.interfaces.${n}.name "${e.querySelector('.mi-name').value.trim()}"`;
+    out += ` members.1.interfaces.${n}.ip-address "${e.querySelector('.mi-ip').value.trim()}"`;
+    out += ` members.1.interfaces.${n}.network-mask "${e.querySelector('.mi-mask').value.trim()}"`;
+  });
+
+  document.querySelectorAll('#cgw-m2-ifaces .entry-block').forEach((e, i) => {
+    const n = i + 1;
+    out += ` members.2.interfaces.${n}.name "${e.querySelector('.mi-name').value.trim()}"`;
+    out += ` members.2.interfaces.${n}.ip-address "${e.querySelector('.mi-ip').value.trim()}"`;
+    out += ` members.2.interfaces.${n}.network-mask "${e.querySelector('.mi-mask').value.trim()}"`;
+  });
+
+  setOutput('cgw-output', out);
+}
+
+// ══════════════════════════════════════════════
+// AUTOCONFIG
+// ══════════════════════════════════════════════
+function addACIfaceEntry() {
+  const n = (document.getElementById('ac-iface-entries')?.querySelectorAll('.entry-block').length || 0) + 1;
+  document.getElementById('ac-iface-entries').insertAdjacentHTML('beforeend', `
+    <div class="entry-block">
+      <div class="entry-header">
+        <span class="entry-num">Interface #${n}</span>
+        <button class="entry-remove" onclick="removeEntry(this,'ac-iface-entries','ac-iface-count')" title="Remove">✕</button>
+      </div>
+      <div class="form-grid form-grid-3">
+        <div class="field"><label>Interface (e.g. bond1)</label><input type="text" class="ac-iface" placeholder="bond1"></div>
+        <div class="field"><label>VLAN ID</label><input type="text" class="ac-vlan" placeholder="100"></div>
+        <div class="field"><label>Comment</label><input type="text" class="ac-comment"></div>
+        <div class="field"><label>IP Address</label><input type="text" class="ac-ip" placeholder="10.0.100.1"></div>
+        <div class="field"><label>Mask Length</label><input type="text" class="ac-mask" placeholder="24"></div>
+      </div>
+    </div>`);
+  updateCount('ac-iface-entries', 'ac-iface-count');
+}
+
+function addACDHCPEntry() {
+  const n = (document.getElementById('ac-dhcp-entries')?.querySelectorAll('.entry-block').length || 0) + 1;
+  document.getElementById('ac-dhcp-entries').insertAdjacentHTML('beforeend', `
+    <div class="entry-block">
+      <div class="entry-header">
+        <span class="entry-num">Subnet #${n}</span>
+        <button class="entry-remove" onclick="removeEntry(this,'ac-dhcp-entries','ac-dhcp-count')" title="Remove">✕</button>
+      </div>
+      <div class="form-grid form-grid-3">
+        <div class="field"><label>Subnet</label><input type="text" class="ac-dsubnet" placeholder="10.0.100.0"></div>
+        <div class="field"><label>Netmask</label><input type="text" class="ac-dnetmask" placeholder="255.255.255.0"></div>
+        <div class="field"><label>Gateway</label><input type="text" class="ac-dgw" placeholder="10.0.100.1"></div>
+        <div class="field"><label>Start IP</label><input type="text" class="ac-dstart" placeholder="10.0.100.100"></div>
+        <div class="field"><label>End IP</label><input type="text" class="ac-dend" placeholder="10.0.100.200"></div>
+      </div>
+    </div>`);
+  updateCount('ac-dhcp-entries', 'ac-dhcp-count');
+}
+
+function buildAutoconfigText() {
+  const g = id => document.getElementById(id)?.value.trim() || '';
+  const hostname = g('ac-hostname'), mac = g('ac-mac'), pw = g('ac-pw');
+  const domain = g('ac-domain'), tz = g('ac-tz');
+  const defgw = g('ac-defgw'), vcegw = g('ac-vcegw');
+
+  let cfg = `######################################################################
+## Configuration of ${mac} (${hostname})
+######################################################################
+set clienv on-failure continue
+set installer policy send-cpuse-data off
+##
+## Backup schedule
+add backup-scheduled name "${hostname}" local
+set backup-scheduled name "${hostname}" recurrence weekly days 6 time 22:30
+add cron job backup_maintenance command "find /var/log/CPbackup/backups -name '*.tgz' -mtime +30 -exec rm {} \\;" recurrence weekly day 0 time 22:30
+##
+## Identity
+set hostname ${hostname}
+set dns primary 208.67.220.220
+set dns secondary 208.67.222.222
+${domain ? `set domainname ${domain}` : '## set domainname (not configured)'}
+set expert-password-hash '${pw}'
+set inactivity-timeout 60
+set ipv6-state off
+##
+## Time
+set timezone ${tz}
+set ntp active on
+set ntp server primary 0.pool.ntp.org version 4
+set ntp server secondary time1.google.com version 4
+##
+## Security hardening
+set net-access telnet off
+set web table-refresh-rate 15
+set web ssl-port 4434
+set web ssl3-enabled off
+set message motd on line msgvalue "This system is for authorized use only. Disconnect immediately if unauthorized!"
+set password-controls min-password-length 24
+set password-controls complexity 4
+set password-controls palindrome-check true
+set password-controls history-checking true
+set password-controls history-length 10
+set password-controls expiration-warning-days 30
+set password-controls force-change-when password
+set password-controls deny-on-fail enable true
+set password-controls deny-on-fail failures-allowed 5
+set password-controls deny-on-fail allow-after 1800
+set password-controls password-hash-type MD5
+##
+## Admin user
+set user admin shell /bin/bash
+set user admin password-hash '${pw}'
+add user jobuser uid 0 homedir /home/jobuser
+##
+## Syslog
+set syslog cplogs off
+set syslog mgmtauditlogs on
+set syslog auditlogs permanent
+##
+## Remove dummy FTW default route
+set static-route default nexthop gateway address 192.168.255.1 off
+##
+## Bonding
+add bonding group 1
+add bonding group 1 interface eth1
+add bonding group 1 interface eth2
+set bonding group 1 mode 8023AD
+set bonding group 1 lacp-rate fast
+set bonding group 1 mii-interval 100
+set bonding group 1 down-delay 200
+set bonding group 1 up-delay 200
+set bonding group 1 xmit-hash-policy layer2
+set interface bond1 state on
+set interface bond1 mtu 1500
+add bonding group 2
+add bonding group 2 interface eth3
+add bonding group 2 interface eth4
+set bonding group 2 mode 8023AD
+set bonding group 2 lacp-rate fast
+set bonding group 2 mii-interval 100
+set bonding group 2 down-delay 200
+set bonding group 2 up-delay 200
+set bonding group 2 xmit-hash-policy layer2
+set interface bond2 state on
+set interface bond2 mtu 1500
+##
+## Static routes
+set static-route default nexthop gateway address ${vcegw} on
+set static-route 10.0.0.0/8 nexthop gateway address ${vcegw} on
+set static-route 172.16.0.0/12 nexthop gateway address ${vcegw} on
+set static-route 192.168.0.0/16 nexthop gateway address ${vcegw} on`;
+
+  const ifaces = document.querySelectorAll('#ac-iface-entries .entry-block');
+  if (ifaces.length) {
+    cfg += '\n##\n## VLAN Interfaces';
+    ifaces.forEach(e => {
+      const iface   = e.querySelector('.ac-iface').value.trim();
+      const vlan    = e.querySelector('.ac-vlan').value.trim();
+      const comment = e.querySelector('.ac-comment').value.trim();
+      const ip      = e.querySelector('.ac-ip').value.trim();
+      const mask    = e.querySelector('.ac-mask').value.trim();
+      cfg += `\nadd interface ${iface} vlan ${vlan}`;
+      cfg += `\nset interface ${iface}.${vlan} comments "${comment}"`;
+      cfg += `\nset interface ${iface}.${vlan} ipv4-address ${ip} mask-length ${mask}`;
+    });
+  }
+
+  const dhcps = document.querySelectorAll('#ac-dhcp-entries .entry-block');
+  if (dhcps.length) {
+    cfg += '\n##\n## DHCP Server Subnets';
+    dhcps.forEach(e => {
+      const sub = e.querySelector('.ac-dsubnet').value.trim();
+      const nm  = e.querySelector('.ac-dnetmask').value.trim();
+      const gw  = e.querySelector('.ac-dgw').value.trim();
+      const s   = e.querySelector('.ac-dstart').value.trim();
+      const end = e.querySelector('.ac-dend').value.trim();
+      cfg += `\nadd dhcp server subnet ${sub} netmask ${nm}`;
+      cfg += `\nset dhcp server subnet ${sub} default-lease 86400`;
+      cfg += `\nset dhcp server subnet ${sub} max-lease 172800`;
+      cfg += `\nset dhcp server subnet ${sub} dns "208.67.222.222, 208.67.220.220"`;
+      cfg += `\nset dhcp server subnet ${sub} default-gateway ${gw}`;
+      cfg += `\nadd dhcp server subnet ${sub} include-ip-pool start ${s} end ${end}`;
+      cfg += `\nset dhcp server subnet ${sub} enable`;
+    });
+  }
+
+  cfg += '\n##\nset clienv on-failure stop\n####################################################################';
+  return cfg;
+}
+
+function generateAutoconfig() {
+  const text = buildAutoconfigText();
+  setOutput('ac-output', text, 'ac-linecount');
+}
+
+function downloadAutoconfig() {
+  const hostname = document.getElementById('ac-hostname').value.trim() || 'gateway';
+  triggerDownload(buildAutoconfigText(), `${hostname}_autoconfig.cfg`);
+}
+
+// ══════════════════════════════════════════════
+// FTW
+// ══════════════════════════════════════════════
+function buildFTWText() {
+  const g = id => document.getElementById(id)?.value.trim() || '';
+  const hostname = g('ftw-hostname'), mac = g('ftw-mac');
+  const pw = g('ftw-pw'), domain = g('ftw-domain');
+  const tz = g('ftw-tz'), cluster = g('ftw-cluster');
+
+  return `#########################################################################
+# Products configuration
+# ${mac}
+#########################################################################
+
+install_security_gw="true"
+gateway_daip="false"
+gateway_cluster_member="${cluster}"
+install_security_managment="false"
+install_mgmt_primary=
+install_mgmt_secondary=
+install_mds_primary=
+install_mds_secondary=
+install_mlm=
+install_mds_interface=
+download_info="true"
+upload_info="false"
+
+#########################################################################
+# Products Parameters
+#########################################################################
+
+mgmt_admin_radio=
+mgmt_admin_name=
+mgmt_admin_passwd=
+mgmt_gui_clients_radio=
+mgmt_gui_clients_first_ip_field=
+mgmt_gui_clients_last_ip_field=
+mgmt_gui_clients_ip_field=
+mgmt_gui_clients_subnet_field=
+mgmt_gui_clients_hostname=
+ftw_sic_key=abc123
+
+#########################################################################
+# Operating System configuration
+#########################################################################
+
+admin_hash='${pw}'
+iface=Mgmt
+ipstat_v4=manually
+ipaddr_v4=192.168.255.253
+masklen_v4=24
+default_gw_v4=192.168.255.1
+ipstat_v6=off
+ipaddr_v6=
+masklen_v6=
+default_gw_v6=
+hostname=${hostname}
+domainname=${domain || ''}
+timezone='${tz}'
+ntp_primary=0.pool.ntp.org
+ntp_primary_version=4
+ntp_secondary=time1.google.com
+ntp_secondary_version=4
+primary=208.67.220.220
+secondary=208.67.222.222
+tertiary=
+proxy_address=
+proxy_port=
+
+#########################################################################
+# Post installation
+#########################################################################
+reboot_if_required="true"`;
+}
+
+function generateFTW() {
+  const text = buildFTWText();
+  setOutput('ftw-output', text, 'ftw-linecount');
+}
+
+function downloadFTW() {
+  const hostname = document.getElementById('ftw-hostname').value.trim() || 'gateway';
+  triggerDownload(buildFTWText(), `${hostname}_ftw_config.cfg`);
+}
+
+// ══════════════════════════════════════════════
+// CISCO SWITCH
+// ══════════════════════════════════════════════
+function addVLANEntry() {
+  const n = (document.getElementById('sw-vlan-entries')?.querySelectorAll('.entry-block').length || 0) + 1;
+  document.getElementById('sw-vlan-entries').insertAdjacentHTML('beforeend', `
+    <div class="entry-block">
+      <div class="entry-header">
+        <span class="entry-num">VLAN #${n}</span>
+        <button class="entry-remove" onclick="removeEntry(this,'sw-vlan-entries','sw-vlan-count')" title="Remove">✕</button>
+      </div>
+      <div class="form-grid form-grid-2">
+        <div class="field"><label>VLAN ID</label><input type="text" class="sw-vid" placeholder="${n * 10}"></div>
+        <div class="field"><label>VLAN Name</label><input type="text" class="sw-vname" placeholder="VLAN_NAME"></div>
+      </div>
+    </div>`);
+  updateCount('sw-vlan-entries', 'sw-vlan-count');
+}
+
+function buildSwitchConfig() {
+  const g = id => document.getElementById(id)?.value.trim() || '';
+  const hostname = g('sw-hostname'), pw = g('sw-pw'), domain = g('sw-domain');
+  const l3vlan = g('sw-l3vlan'), l3name = g('sw-l3name');
+  const ip = g('sw-ip'), sm = g('sw-sm'), gw = g('sw-gw');
+  const location = g('sw-location');
+  const trunk = g('sw-trunk');
+
+  let vlanConfig = '';
+  document.querySelectorAll('#sw-vlan-entries .entry-block').forEach(e => {
+    const vid = e.querySelector('.sw-vid').value.trim();
+    const vname = e.querySelector('.sw-vname').value.trim();
+    if (vid) vlanConfig += `vlan ${vid}\n name ${vname}\n`;
+  });
+
+  const vlans = [...document.querySelectorAll('#sw-vlan-entries .entry-block')]
+    .map(e => e.querySelector('.sw-vid').value.trim()).filter(Boolean).join(',');
+
+  let trunkConfig = '';
+  if (trunk) {
+    trunkConfig = `\n!\ninterface range Gi${trunk}
+ description TRUNK_INT
+ switchport mode trunk
+ switchport trunk allowed vlan ${vlans}`;
+  }
+
+  let pcConfig = '';
+  ['sw-pc1', 'sw-pc2', 'sw-pc3'].forEach((id, i) => {
+    if (document.getElementById(id).checked) {
+      pcConfig += `\n!\ninterface Port-channel${i + 1}
+ description TO_Port-Channel_${i + 1}
+ switchport trunk allowed vlan ${vlans}
+ switchport mode trunk
+ switchport nonegotiate
+ storm-control broadcast level 10.00
+ spanning-tree bpduguard enable`;
+    }
+  });
+
+  return `!
+service password-encryption
+!
+hostname ${hostname}
+!
+enable secret ${pw}
+!
+username admin privilege 15 secret ${pw}
+no aaa new-model
+!
+no ip domain lookup
+${domain ? `ip domain name ${domain}` : '! ip domain name (not configured)'}
+ip ssh version 2
+crypto key generate rsa modulus 2048
+!
+spanning-tree mode rapid-pvst
+spanning-tree logging
+spanning-tree extend system-id
+errdisable recovery cause all
+!
+vlan internal allocation policy ascending
+${vlanConfig}!
+lldp run
+!
+interface Vlan${l3vlan}
+ description ${l3name}
+ ip address ${ip} ${sm}
+!
+ip default-gateway ${gw}
+no ip http server
+no ip http secure-server
+!
+banner login ^C
+#######################################################################
+#
+# SWITCH NAME     : ${hostname}
+# SWITCH LOCATION : ${location} Server Room
+#
+# UNAUTHORIZED ACCESS WILL BE PROSECUTED
+#
+#######################################################################
+^C
+!
+line con 0
+ login local
+ logging synchronous
+!
+line vty 0 4
+ exec-timeout 15 0
+ privilege level 15
+ logging synchronous
+ transport input ssh
+ transport output ssh
+ login local
+!
+line vty 5 15
+ exec-timeout 15 0
+ privilege level 15
+ logging synchronous
+ transport input ssh
+ transport output ssh
+ login local${trunkConfig}${pcConfig}
+!
+end`;
+}
+
+function generateSwitchConfig() {
+  const text = buildSwitchConfig();
+  setOutput('sw-output', text, 'sw-linecount');
+}
+
+function downloadSwitchConfig() {
+  const hostname = document.getElementById('sw-hostname').value.trim() || 'switch';
+  triggerDownload(buildSwitchConfig(), `${hostname}.txt`);
+}
+
+// ══════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════
+function initPages() {
+  addHostEntry();
+  addBulkHostEntry();
+  addNetworkEntry();
+  addGroupEntry();
+  addGaiaIfaceEntry('gaia-iface-entries');
+  addGaiaIfaceEntry('gaia-embedded-entries');
+  addVLANEntry();
+}
+
+// Keyboard shortcut: Ctrl+Enter generates on active page
+document.addEventListener('keydown', e => {
+  if (e.ctrlKey && e.key === 'Enter') {
+    const activePage = document.querySelector('.page.active');
+    if (!activePage) return;
+    const pageId = activePage.id;
+    const map = {
+      'page-create_host': generateHostOutput,
+      'page-bulk_create_host': generateBulkHostOutput,
+      'page-create_network_objects': generateNetworkOutput,
+      'page-create_network_groups': generateGroupOutput,
+      'page-gaia_interface': () => generateGaiaIfaceOutput('gaia-iface-entries','gaia-iface-output',false),
+      'page-gaia_embedded_interface': () => generateGaiaIfaceOutput('gaia-embedded-entries','gaia-embedded-output',true),
+      'page-simple_gateway': generateSGWOutput,
+      'page-cluster_gateway': generateCGWOutput,
+      'page-autoconfig': generateAutoconfig,
+      'page-ftw': generateFTW,
+      'page-cisco_switch': generateSwitchConfig,
+    };
+    if (map[pageId]) { e.preventDefault(); map[pageId](); }
+  }
+});
+
+// ══════════════════════════════════════════════
+// SUBNET CALCULATOR
+// ══════════════════════════════════════════════
+function ipToInt(ip) {
+  return ip.split('.').reduce((acc, oct) => (acc << 8) + parseInt(oct), 0) >>> 0;
+}
+function intToIp(n) {
+  return [(n>>>24)&255,(n>>>16)&255,(n>>>8)&255,n&255].join('.');
+}
+function prefixToMask(prefix) {
+  return prefix === 0 ? 0 : (0xFFFFFFFF << (32 - prefix)) >>> 0;
+}
+function maskToPrefix(mask) {
+  let n = ipToInt(mask), count = 0;
+  while (n & 0x80000000) { count++; n = (n << 1) >>> 0; }
+  return count;
+}
+function isValidIp(ip) {
+  const parts = ip.split('.');
+  return parts.length === 4 && parts.every(p => !isNaN(p) && +p >= 0 && +p <= 255);
+}
+function renderSubnetResults(ip, prefix) {
+  const maskInt = prefixToMask(prefix);
+  const netInt  = (ipToInt(ip) & maskInt) >>> 0;
+  const bcastInt = (netInt | (~maskInt >>> 0)) >>> 0;
+  const firstHost = prefix < 31 ? netInt + 1 : netInt;
+  const lastHost  = prefix < 31 ? bcastInt - 1 : bcastInt;
+  const usable    = prefix < 31 ? Math.pow(2, 32 - prefix) - 2 : (prefix === 31 ? 2 : 1);
+  const wildcard  = intToIp(~maskInt >>> 0);
+
+  const fields = [
+    ['Network Address',   intToIp(netInt),        'var(--accent)'],
+    ['Subnet Mask',       intToIp(maskInt),        'var(--text)'],
+    ['CIDR Notation',     `/${prefix}`,            'var(--accent)'],
+    ['Wildcard Mask',     wildcard,                'var(--warn)'],
+    ['Broadcast Address', intToIp(bcastInt),       'var(--danger)'],
+    ['First Usable Host', intToIp(firstHost),      'var(--accent2)'],
+    ['Last Usable Host',  intToIp(lastHost),       'var(--accent2)'],
+    ['Usable Hosts',      usable.toLocaleString(), 'var(--accent2)'],
+    ['Total Addresses',   Math.pow(2, 32-prefix).toLocaleString(), 'var(--text)'],
+    ['Host Bits',         (32 - prefix).toString(), 'var(--text)'],
+    ['IP Class',          prefix<=7?'A':prefix<=15?'B':prefix<=23?'C':'D/E/Special', 'var(--text)'],
+    ['Binary Mask',       intToIp(maskInt).split('.').map(o=>(+o).toString(2).padStart(8,'0')).join('.'), 'var(--text-dim)'],
+  ];
+
+  const grid = document.getElementById('sc-grid');
+  grid.innerHTML = fields.map(([label, val, color]) => `
+    <div style="background:var(--output-bg);border:1px solid var(--border);border-radius:4px;padding:10px 12px;">
+      <div style="font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-dim);font-family:'Syne',sans-serif;font-weight:700;margin-bottom:5px;">${label}</div>
+      <div style="font-size:13px;color:${color};font-family:'JetBrains Mono',monospace;font-weight:500;">${val}</div>
+    </div>`).join('');
+
+  document.getElementById('sc-results').style.display = 'block';
+  document.getElementById('sc-hosts-card').style.display = 'block';
+  document.getElementById('sc-summary').textContent = `${usable.toLocaleString()} usable hosts — range: ${intToIp(firstHost)} → ${intToIp(lastHost)}`;
+
+  // update mask field if calc was from CIDR
+  document.getElementById('sc-mask').value = intToIp(maskInt);
+}
+
+function calcSubnet() {
+  const val = document.getElementById('sc-cidr').value.trim();
+  if (!val) { document.getElementById('sc-results').style.display='none'; document.getElementById('sc-hosts-card').style.display='none'; return; }
+  let ip, prefix;
+  if (val.includes('/')) {
+    [ip, prefix] = val.split('/');
+    prefix = parseInt(prefix);
+  } else {
+    ip = val; prefix = 32;
+  }
+  if (!isValidIp(ip) || isNaN(prefix) || prefix < 0 || prefix > 32) return;
+  renderSubnetResults(ip, prefix);
+}
+
+function calcSubnetFromMask() {
+  const mask = document.getElementById('sc-mask').value.trim();
+  const cidr = document.getElementById('sc-cidr').value.trim();
+  if (!isValidIp(mask)) return;
+  const prefix = maskToPrefix(mask);
+  const ip = cidr.includes('/') ? cidr.split('/')[0] : (isValidIp(cidr) ? cidr : '0.0.0.0');
+  document.getElementById('sc-cidr').value = ip + '/' + prefix;
+  renderSubnetResults(ip, prefix);
+}
+
+function toggleHostList() {
+  const wrap = document.getElementById('sc-hostlist');
+  const btn = event.target;
+  if (wrap.style.display === 'none') {
+    const val = document.getElementById('sc-cidr').value.trim();
+    if (!val.includes('/')) return;
+    const [ip, pfx] = val.split('/');
+    const prefix = parseInt(pfx);
+    if (prefix < 16) { toast('Too many hosts to display (use /16 or smaller range)', 'error'); return; }
+    const mask = prefixToMask(prefix);
+    const net  = (ipToInt(ip) & mask) >>> 0;
+    const bcast = (net | (~mask >>> 0)) >>> 0;
+    let lines = [];
+    for (let i = net+1; i < bcast; i++) lines.push(intToIp(i));
+    document.getElementById('sc-hostlist-body').textContent = lines.join('\n');
+    wrap.style.display = 'block';
+    btn.textContent = 'Hide Hosts';
+  } else {
+    wrap.style.display = 'none';
+    btn.textContent = 'Show All Hosts';
+  }
+}
+
+// ══════════════════════════════════════════════
+// IP / VLAN PLANNER
+// ══════════════════════════════════════════════
+function syncVLANRows() {
+  const count = parseInt(document.getElementById('vp-count').value) || 0;
+  const container = document.getElementById('vp-vlan-rows');
+  const existing = container.querySelectorAll('.vp-row').length;
+  const defHosts = document.getElementById('vp-defhosts').value || '50';
+
+  if (count > existing) {
+    for (let i = existing + 1; i <= count; i++) {
+      container.insertAdjacentHTML('beforeend', `
+        <div class="vp-row entry-block" style="margin-bottom:6px;">
+          <div class="form-grid" style="grid-template-columns:80px 1fr 130px;">
+            <div class="field"><label>VLAN ID</label><input type="text" class="vp-vid" value="${i * 10}" oninput="planVLANs()"></div>
+            <div class="field"><label>Name</label><input type="text" class="vp-vname" value="VLAN_${i * 10}" oninput="planVLANs()"></div>
+            <div class="field"><label>Hosts Needed</label><input type="text" class="vp-hosts" value="${defHosts}" oninput="planVLANs()"></div>
+          </div>
+        </div>`);
+    }
+  } else if (count < existing) {
+    const rows = container.querySelectorAll('.vp-row');
+    for (let i = existing; i > count; i--) rows[i-1].remove();
+  }
+  document.getElementById('vp-vlan-count').textContent = count;
+  planVLANs();
+}
+
+function nextPow2(n) {
+  let p = 1; while (p < n) p <<= 1; return p;
+}
+
+function planVLANs() {
+  const baseStr = document.getElementById('vp-base').value.trim();
+  if (!isValidIp(baseStr)) { document.getElementById('vp-results').style.display='none'; return; }
+
+  const rows = document.querySelectorAll('#vp-vlan-rows .vp-row');
+  if (!rows.length) { document.getElementById('vp-results').style.display='none'; return; }
+
+  let cursor = ipToInt(baseStr);
+  const tbody = document.getElementById('vp-tbody');
+  tbody.innerHTML = '';
+  let totalUsed = 0;
+
+  rows.forEach(row => {
+    const vid   = row.querySelector('.vp-vid').value.trim() || '—';
+    const vname = row.querySelector('.vp-vname').value.trim() || '—';
+    const hosts = parseInt(row.querySelector('.vp-hosts').value) || 2;
+    const needed = hosts + 2; // network + broadcast
+    const size   = nextPow2(needed);
+    const prefix = 32 - Math.log2(size);
+    const maskInt = prefixToMask(prefix);
+
+    // align cursor to block boundary
+    if (cursor % size !== 0) cursor = Math.floor(cursor / size) * size + size;
+
+    const netInt   = cursor;
+    const bcast    = netInt + size - 1;
+    const gateway  = netInt + 1;
+    const lastHost = bcast - 1;
+    const usable   = size - 2;
+    totalUsed += size;
+
+    const tr = document.createElement('tr');
+    tr.style.cssText = 'border-bottom:1px solid var(--border);';
+    tr.innerHTML = `
+      <td style="padding:7px 10px;color:var(--accent);font-weight:600;">${vid}</td>
+      <td style="padding:7px 10px;color:var(--text);">${vname}</td>
+      <td style="padding:7px 10px;color:var(--text-dim);">${hosts}</td>
+      <td style="padding:7px 10px;color:var(--accent2);">${intToIp(netInt)}/${prefix}</td>
+      <td style="padding:7px 10px;color:var(--text-dim);">${intToIp(maskInt)}</td>
+      <td style="padding:7px 10px;color:var(--warn);">${intToIp(gateway)}</td>
+      <td style="padding:7px 10px;color:var(--danger);">${intToIp(bcast)}</td>
+      <td style="padding:7px 10px;color:var(--accent2);">${usable}</td>`;
+    tbody.appendChild(tr);
+    cursor = bcast + 1;
+  });
+
+  // Supernet calc
+  const totalSize = cursor - ipToInt(baseStr);
+  const superPrefix = 32 - Math.ceil(Math.log2(totalSize + 1));
+  document.getElementById('vp-supernet-info').innerHTML =
+    `Supernet: <strong style="color:var(--accent2)">${baseStr}/${Math.max(0,superPrefix)}</strong> — covering ${rows.length} VLANs, ${totalUsed} total addresses`;
+
+  document.getElementById('vp-results').style.display = 'block';
+}
+
+function copyVLANTable() {
+  const rows = document.querySelectorAll('#vp-tbody tr');
+  const header = 'VLAN\tName\tHosts Needed\tSubnet\tMask\tGateway\tBroadcast\tUsable Hosts';
+  const lines = [header];
+  rows.forEach(r => {
+    lines.push([...r.querySelectorAll('td')].map(td => td.textContent.trim()).join('\t'));
+  });
+  navigator.clipboard.writeText(lines.join('\n')).then(() => toast('Table copied!')).catch(() => toast('Copy failed','error'));
+}
+
+function downloadVLANPlan() {
+  const rows = document.querySelectorAll('#vp-tbody tr');
+  const header = 'VLAN,Name,Hosts Needed,Subnet,Mask,Gateway,Broadcast,Usable Hosts\n';
+  const lines = [...rows].map(r => [...r.querySelectorAll('td')].map(td => td.textContent.trim()).join(','));
+  triggerDownload(header + lines.join('\n'), 'vlan_plan.csv');
+}
+
+// ══════════════════════════════════════════════
+// PASSWORD GENERATOR
+// ══════════════════════════════════════════════
+let _generatedPasswords = [];
+
+function generatePassword() {
+  const len     = Math.min(128, Math.max(4, parseInt(document.getElementById('pg-len').value) || 24));
+  const count   = Math.min(20, Math.max(1, parseInt(document.getElementById('pg-count').value) || 5));
+  const noAmbig = document.getElementById('pg-noambig').value === 'yes';
+  const useUpper = document.getElementById('pg-upper').checked;
+  const useLower = document.getElementById('pg-lower').checked;
+  const useNum   = document.getElementById('pg-num').checked;
+  const useSym   = document.getElementById('pg-sym').checked;
+
+  let upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  let lower = 'abcdefghijklmnopqrstuvwxyz';
+  let nums  = '0123456789';
+  let syms  = '!@#$%^&*()-_=+[]{}|;:,.<>?';
+
+  if (noAmbig) { upper = upper.replace(/[O]/g,''); lower = lower.replace(/[l]/g,''); nums = nums.replace(/[01]/g,''); }
+
+  let charset = '';
+  if (useUpper) charset += upper;
+  if (useLower) charset += lower;
+  if (useNum)   charset += nums;
+  if (useSym)   charset += syms;
+
+  if (!charset) { toast('Select at least one character set', 'error'); return; }
+
+  _generatedPasswords = [];
+
+  for (let p = 0; p < count; p++) {
+    const arr = new Uint32Array(Math.max(len, 8));
+    crypto.getRandomValues(arr);
+    const required = [];
+    if (useUpper) required.push(upper[arr[0] % upper.length]);
+    if (useLower) required.push(lower[arr[1] % lower.length]);
+    if (useNum)   required.push(nums[arr[2] % nums.length]);
+    if (useSym)   required.push(syms[arr[3] % syms.length]);
+    let pwArr = [];
+    for (let i = 0; i < len; i++) pwArr.push(charset[arr[i] % charset.length]);
+    required.forEach((ch, i) => { pwArr[i] = ch; });
+    for (let i = pwArr.length - 1; i > 0; i--) {
+      const j = arr[i % arr.length] % (i + 1);
+      [pwArr[i], pwArr[j]] = [pwArr[j], pwArr[i]];
+    }
+    _generatedPasswords.push(pwArr.join(''));
+  }
+
+  const list = document.getElementById('pg-list');
+  list.innerHTML = _generatedPasswords.map((pw, i) => {
+    const strength = getStrength(pw);
+    return `<div style="display:flex;align-items:center;gap:8px;background:var(--output-bg);border:1px solid var(--border);border-radius:3px;padding:8px 12px;">
+      <span style="flex:1;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--output-text);word-break:break-all;">${pw}</span>
+      <span style="font-size:9px;padding:2px 7px;border-radius:2px;font-family:'Syne',sans-serif;font-weight:700;letter-spacing:0.08em;background:${strength.bg};color:${strength.color};border:1px solid ${strength.color}44;">${strength.label}</span>
+      <button class="btn btn-ghost btn-sm" onclick="copyPassword(${i})">⎘</button>
+    </div>`;
+  }).join('');
+}
+
+function getStrength(pw) {
+  let score = 0;
+  if (pw.length >= 16) score++;
+  if (pw.length >= 24) score++;
+  if (/[A-Z]/.test(pw)) score++;
+  if (/[a-z]/.test(pw)) score++;
+  if (/[0-9]/.test(pw)) score++;
+  if (/[^A-Za-z0-9]/.test(pw)) score++;
+  if (score <= 2) return { label:'WEAK',   color:'var(--danger)', bg:'rgba(255,71,87,0.1)' };
+  if (score <= 4) return { label:'MEDIUM', color:'var(--warn)',   bg:'rgba(255,179,71,0.1)' };
+  return              { label:'STRONG', color:'var(--accent2)', bg:'rgba(0,255,136,0.1)' };
+}
+
+function copyPassword(i) {
+  const pw = _generatedPasswords[i];
+  if (pw === undefined) { toast('Nothing to copy', 'error'); return; }
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(pw).then(() => toast('Copied!')).catch(() => fallbackCopy(pw));
+  } else {
+    fallbackCopy(pw);
+  }
+}
+
+function copyAllPasswords() {
+  if (!_generatedPasswords.length) { toast('Generate passwords first','error'); return; }
+  const text = _generatedPasswords.join('\n');
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text).then(() => toast('All passwords copied!')).catch(() => fallbackCopy(text));
+  } else {
+    fallbackCopy(text);
+  }
+}
+
+// ══════════════════════════════════════════════
+// SAFE COPY (clipboard API + textarea fallback)
+// ══════════════════════════════════════════════
+function safeCopy(elId) {
+  const text = document.getElementById(elId).textContent.trim();
+  if (!text) { toast('Nothing to copy', 'error'); return; }
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text).then(() => toast('Copied!')).catch(() => fallbackCopy(text));
+  } else {
+    fallbackCopy(text);
+  }
+}
+
+function fallbackCopy(text) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.cssText = 'position:fixed;top:-9999px;left:-9999px;opacity:0;';
+  document.body.appendChild(ta);
+  ta.focus(); ta.select();
+  try {
+    document.execCommand('copy');
+    toast('Copied!');
+  } catch(e) {
+    toast('Copy failed — please copy manually', 'error');
+  }
+  document.body.removeChild(ta);
+}
+
+// ══════════════════════════════════════════════
+// OPENSSL PASSWORD HASH (MD5-crypt / SHA-crypt)
+// ══════════════════════════════════════════════
+const CRYPT_CHARS = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789./';
+
+function generateSalt() {
+  const algo = document.getElementById('ph-algo').value;
+  const maxLen = algo === 'md5crypt' ? 8 : 16;
+  const arr = new Uint8Array(maxLen);
+  crypto.getRandomValues(arr);
+  const salt = [...arr].map(b => CRYPT_CHARS[b % CRYPT_CHARS.length]).join('');
+  document.getElementById('ph-salt').value = salt;
+  updateCryptHash();
+  toast('Salt generated!');
+}
+
+function clearSalt() {
+  document.getElementById('ph-salt').value = '';
+  updateCryptHash();
+}
+
+async function updateCryptHash() {
+  const plain = document.getElementById('ph-plain').value;
+  const algo  = document.getElementById('ph-algo').value;
+  const resultEl = document.getElementById('ph-salt-result');
+
+  if (!plain) { resultEl.style.display = 'none'; return; }
+
+  // Use provided salt or auto-generate one
+  let salt = document.getElementById('ph-salt').value.trim();
+  const maxLen = algo === 'md5crypt' ? 8 : 16;
+  if (!salt) {
+    const arr = new Uint8Array(maxLen);
+    crypto.getRandomValues(arr);
+    salt = [...arr].map(b => CRYPT_CHARS[b % CRYPT_CHARS.length]).join('');
+    document.getElementById('ph-salt').value = salt;
+  }
+  // Enforce max salt length
+  salt = salt.slice(0, maxLen);
+
+  let hash, flag, cmd;
+  if (algo === 'md5crypt') {
+    hash = await md5crypt(plain, salt);
+    flag = '-1'; cmd = `openssl passwd -1 -salt ${salt}`;
+  } else if (algo === 'sha256crypt') {
+    hash = await shacrypt(plain, salt, 'SHA-256', 5000, 'SHA-256');
+    flag = '-5'; cmd = `openssl passwd -5 -salt ${salt}`;
+  } else {
+    hash = await shacrypt(plain, salt, 'SHA-512', 5000, 'SHA-512');
+    flag = '-6'; cmd = `openssl passwd -6 -salt ${salt}`;
+  }
+
+  document.getElementById('ph-salt-display').textContent  = salt;
+  document.getElementById('ph-openssl-cmd').textContent   = cmd;
+  document.getElementById('ph-salted-string').textContent = hash;
+  resultEl.style.display = 'block';
+}
+
+// ── MD5-crypt (RFC 2014 / OpenSSL passwd -1) ──
+async function md5crypt(password, salt) {
+  const enc = s => new TextEncoder().encode(s);
+
+  // MD5 working directly on Uint8Array
+  const md5bytes = (data) => {
+    // Pad message
+    const len = data.length;
+    const bitLen = len * 8;
+    const padLen = ((55 - len) % 64 + 64) % 64 + 1;
+    const msg = new Uint8Array(len + padLen + 8);
+    msg.set(data);
+    msg[len] = 0x80;
+    // Append bit length as 64-bit LE
+    let bl = bitLen;
+    for (let i = 0; i < 8; i++) { msg[len + padLen + i] = bl & 0xff; bl = Math.floor(bl / 256); }
+
+    // Helper
+    const add = (a,b) => (a+b) >>> 0;
+    const rol = (x,n) => ((x<<n)|(x>>>(32-n))) >>> 0;
+    const F=(b,c,d)=>((b&c)|(~b&d))>>>0, G=(b,c,d)=>((b&d)|(c&~d))>>>0;
+    const H=(b,c,d)=>(b^c^d)>>>0,        I=(b,c,d)=>(c^(b|~d))>>>0;
+
+    const T = new Uint32Array(64);
+    for (let i=0;i<64;i++) T[i] = (Math.abs(Math.sin(i+1)) * 0x100000000) >>> 0;
+
+    const S = [7,12,17,22,7,12,17,22,7,12,17,22,7,12,17,22,
+               5, 9,14,20,5, 9,14,20,5, 9,14,20,5, 9,14,20,
+               4,11,16,23,4,11,16,23,4,11,16,23,4,11,16,23,
+               6,10,15,21,6,10,15,21,6,10,15,21,6,10,15,21];
+
+    let a0=0x67452301, b0=0xefcdab89, c0=0x98badcfe, d0=0x10325476;
+
+    for (let off=0; off<msg.length; off+=64) {
+      const M = new Uint32Array(16);
+      for (let j=0;j<16;j++) M[j]=msg[off+j*4]|(msg[off+j*4+1]<<8)|(msg[off+j*4+2]<<16)|(msg[off+j*4+3]<<24);
+      let A=a0,B=b0,C=c0,D=d0;
+      for (let i=0;i<64;i++) {
+        let fn, g;
+        if      (i<16){fn=F(B,C,D);g=i;}
+        else if (i<32){fn=G(B,C,D);g=(5*i+1)%16;}
+        else if (i<48){fn=H(B,C,D);g=(3*i+5)%16;}
+        else          {fn=I(B,C,D);g=(7*i)%16;}
+        const temp=add(add(add(A,fn),M[g]),T[i]);
+        A=D; D=C; C=B; B=add(B,rol(temp,S[i]));
+      }
+      a0=add(a0,A); b0=add(b0,B); c0=add(c0,C); d0=add(d0,D);
+    }
+
+    const out = new Uint8Array(16);
+    [a0,b0,c0,d0].forEach((v,i)=>{out[i*4]=v&0xff;out[i*4+1]=(v>>8)&0xff;out[i*4+2]=(v>>16)&0xff;out[i*4+3]=(v>>24)&0xff;});
+    return out;
+  };
+
+  const pw    = enc(password);
+  const sl    = enc(salt);
+  const magic = enc('$1$');
+  const cat   = (...a) => { const t=new Uint8Array(a.reduce((s,x)=>s+x.length,0)); let o=0; a.forEach(x=>{t.set(x,o);o+=x.length;}); return t; };
+
+  // Digest B = MD5(pw + salt + pw)
+  const B = md5bytes(cat(pw, sl, pw));
+
+  // Build input for Digest A: pw + magic + salt + B(repeated, pw.length bytes) + bits of pw.length
+  let aArr = [...pw, ...magic, ...sl];
+  let plen = pw.length;
+  while (plen > 0) { aArr.push(...B.slice(0, Math.min(plen, 16))); plen -= 16; }
+  plen = pw.length;
+  while (plen > 0) { aArr.push(plen & 1 ? 0 : pw[0]); plen >>= 1; }   // 0x00 for odd bits — this is the key fix
+
+  // Digest A (initial C)
+  let C = md5bytes(new Uint8Array(aArr));
+
+  // 1000 rounds
+  for (let i = 0; i < 1000; i++) {
+    let d = [];
+    if (i & 1) d.push(...pw); else d.push(...C);
+    if (i % 3) d.push(...sl);
+    if (i % 7) d.push(...pw);
+    if (i & 1) d.push(...C); else d.push(...pw);
+    C = md5bytes(new Uint8Array(d));
+  }
+
+  // crypt-base64 encode
+  const to64 = (v, n) => { let r=''; while(n-->0){r+=CRYPT_CHARS[v&0x3f];v>>>=6;} return r; };
+  const hash =
+    to64((C[0]<<16)|(C[6]<<8)|C[12], 4) +
+    to64((C[1]<<16)|(C[7]<<8)|C[13], 4) +
+    to64((C[2]<<16)|(C[8]<<8)|C[14], 4) +
+    to64((C[3]<<16)|(C[9]<<8)|C[15], 4) +
+    to64((C[4]<<16)|(C[10]<<8)|C[5],  4) +
+    to64(C[11], 2);
+
+  return `$1$${salt}$${hash}`;
+}
+
+// ── SHA-crypt (SHA-256 = $5$, SHA-512 = $6$) ──
+async function shacrypt(password, salt, algoName, rounds, variant) {
+  const enc = s => new TextEncoder().encode(s);
+  const digest = async data => new Uint8Array(await crypto.subtle.digest(algoName, data));
+  const concat = (...arrays) => { const len = arrays.reduce((s,a)=>s+a.length,0); const r=new Uint8Array(len); let o=0; arrays.forEach(a=>{r.set(a,o);o+=a.length;}); return r; };
+
+  const id   = variant === 'SHA-256' ? '5' : '6';
+  const blen = variant === 'SHA-256' ? 32 : 64;
+
+  const pw = enc(password);
+  const sl = enc(salt);
+
+  // Digest B: password + salt + password
+  const B = await digest(concat(pw, sl, pw));
+
+  // Digest A: password + salt + B (repeated, pw.length bytes)
+  let aInput = [...pw, ...sl];
+  let plen = pw.length;
+  while (plen > 0) { aInput.push(...B.slice(0, Math.min(plen, blen))); plen -= blen; }
+  let pp = pw.length;
+  while (pp > 0) { aInput.push(pp & 1 ? 0 : pw[0]); pp >>= 1; }
+  const A = await digest(new Uint8Array(aInput));
+
+  // P string: repeat password to pw.length bytes
+  let pStr = new Uint8Array(0);
+  plen = pw.length;
+  const fullPW = new Uint8Array(blen); fullPW.set(A.slice(0, blen));
+  while (plen > 0) { pStr = concat(pStr, pw.slice(0, Math.min(plen, pw.length))); plen -= pw.length; }
+  pStr = pStr.slice(0, pw.length);
+
+  // S string: repeat salt to salt.length bytes
+  let sStr = new Uint8Array(0);
+  let slen = sl.length;
+  while (slen > 0) { sStr = concat(sStr, sl.slice(0, Math.min(slen, sl.length))); slen -= sl.length; }
+  sStr = sStr.slice(0, sl.length);
+
+  // rounds
+  let C = A;
+  for (let i = 0; i < rounds; i++) {
+    let d = new Uint8Array(0);
+    if (i & 1) d = concat(d, pStr); else d = concat(d, C);
+    if (i % 3) d = concat(d, sStr);
+    if (i % 7) d = concat(d, pStr);
+    if (i & 1) d = concat(d, C); else d = concat(d, pStr);
+    C = await digest(d);
+  }
+
+  // Base64 encode with crypt ordering
+  const to64 = (v, n) => { let r=''; while(n-->0){r+=CRYPT_CHARS[v&0x3f];v>>=6;} return r; };
+
+  let hash = '';
+  if (variant === 'SHA-256') {
+    hash =
+      to64((C[0]<<16)|(C[10]<<8)|C[20],4)+to64((C[21]<<16)|(C[1]<<8)|C[11],4)+
+      to64((C[12]<<16)|(C[22]<<8)|C[2],4)+to64((C[3]<<16)|(C[13]<<8)|C[23],4)+
+      to64((C[24]<<16)|(C[4]<<8)|C[14],4)+to64((C[15]<<16)|(C[25]<<8)|C[5],4)+
+      to64((C[6]<<16)|(C[16]<<8)|C[26],4)+to64((C[27]<<16)|(C[7]<<8)|C[17],4)+
+      to64((C[18]<<16)|(C[28]<<8)|C[8],4)+to64((C[9]<<16)|(C[19]<<8)|C[29],4)+
+      to64((C[31]<<8)|C[30],3);
+  } else {
+    hash =
+      to64((C[0]<<16)|(C[21]<<8)|C[42],4)+to64((C[22]<<16)|(C[43]<<8)|C[1],4)+
+      to64((C[44]<<16)|(C[2]<<8)|C[23],4)+to64((C[3]<<16)|(C[24]<<8)|C[45],4)+
+      to64((C[25]<<16)|(C[46]<<8)|C[4],4)+to64((C[47]<<16)|(C[5]<<8)|C[26],4)+
+      to64((C[6]<<16)|(C[27]<<8)|C[48],4)+to64((C[28]<<16)|(C[49]<<8)|C[7],4)+
+      to64((C[50]<<16)|(C[8]<<8)|C[29],4)+to64((C[9]<<16)|(C[30]<<8)|C[51],4)+
+      to64((C[31]<<16)|(C[52]<<8)|C[10],4)+to64((C[53]<<16)|(C[11]<<8)|C[32],4)+
+      to64((C[12]<<16)|(C[33]<<8)|C[54],4)+to64((C[34]<<16)|(C[55]<<8)|C[13],4)+
+      to64((C[56]<<16)|(C[14]<<8)|C[35],4)+to64((C[15]<<16)|(C[36]<<8)|C[57],4)+
+      to64((C[37]<<16)|(C[58]<<8)|C[16],4)+to64((C[59]<<16)|(C[17]<<8)|C[38],4)+
+      to64((C[18]<<16)|(C[39]<<8)|C[60],4)+to64((C[40]<<16)|(C[61]<<8)|C[19],4)+
+      to64((C[62]<<16)|(C[20]<<8)|C[41],4)+to64(C[63],2);
+  }
+
+  return `$${id}$${salt}$${hash}`;
+}
+
+function copyEl(id) {
+  const text = document.getElementById(id).textContent.trim();
+  if (!text) { toast('Nothing to copy', 'error'); return; }
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text).then(() => toast('Copied!')).catch(() => fallbackCopy(text));
+  } else {
+    fallbackCopy(text);
+  }
+}
+
+// Auto-init password generator on page load
+document.addEventListener('DOMContentLoaded', () => {
+  generatePassword();
+  buildWildcardRefTable();
+});
+
+// ══════════════════════════════════════════════
+// DARK / LIGHT MODE TOGGLE
+// ══════════════════════════════════════════════
+let _isDark = true;
+function toggleTheme() {
+  _isDark = !_isDark;
+  const root = document.documentElement;
+  if (_isDark) {
+    root.style.setProperty('--bg',           '#080c0f');
+    root.style.setProperty('--surface',      '#0d1318');
+    root.style.setProperty('--surface2',     '#111820');
+    root.style.setProperty('--border',       '#1e2d3a');
+    root.style.setProperty('--border2',      '#243344');
+    root.style.setProperty('--text',         '#c8dce8');
+    root.style.setProperty('--text-dim',     '#5a7a8f');
+    root.style.setProperty('--text-bright',  '#e8f4ff');
+    root.style.setProperty('--output-bg',    '#060a0d');
+    root.style.setProperty('--output-text',  '#00ff88');
+    document.getElementById('theme-tile-label').textContent = '🌙 Switch to Light Mode';
+    document.getElementById('nav-theme').querySelector('span+*') && (document.getElementById('nav-theme').lastChild.textContent = '🌙 Dark Mode');
+  } else {
+    root.style.setProperty('--bg',           '#f0f4f8');
+    root.style.setProperty('--surface',      '#ffffff');
+    root.style.setProperty('--surface2',     '#e8eef4');
+    root.style.setProperty('--border',       '#c8d8e8');
+    root.style.setProperty('--border2',      '#a8c0d8');
+    root.style.setProperty('--text',         '#1a2a38');
+    root.style.setProperty('--text-dim',     '#5a7a8f');
+    root.style.setProperty('--text-bright',  '#0a1a28');
+    root.style.setProperty('--output-bg',    '#e8f0f8');
+    root.style.setProperty('--output-text',  '#007744');
+    document.getElementById('theme-tile-label').textContent = '☀️ Switch to Dark Mode';
+  }
+}
+// Make theme toggle nav item call toggleTheme instead of navigate
+document.getElementById('nav-theme').onclick = (e) => { e.stopPropagation(); toggleTheme(); };
+
+// ══════════════════════════════════════════════
+// WILDCARD CONVERTER
+// ══════════════════════════════════════════════
+function subnetToWildcard() {
+  const val = document.getElementById('wc-subnet').value.trim();
+  const el  = document.getElementById('wc-result1');
+  if (!isValidIp(val)) { el.textContent = ''; return; }
+  const maskInt = ipToInt(val);
+  el.textContent = intToIp((~maskInt) >>> 0);
+}
+
+function wildcardToSubnet() {
+  const val = document.getElementById('wc-wild').value.trim();
+  const el  = document.getElementById('wc-result2');
+  if (!isValidIp(val)) { el.textContent = ''; return; }
+  const wildInt = ipToInt(val);
+  el.textContent = intToIp((~wildInt) >>> 0);
+}
+
+function cidrToBoth() {
+  let val = document.getElementById('wc-cidr').value.trim().replace('/','');
+  const el = document.getElementById('wc-result3');
+  const prefix = parseInt(val);
+  if (isNaN(prefix) || prefix < 0 || prefix > 32) { el.textContent = ''; return; }
+  const maskInt = prefixToMask(prefix);
+  const wildInt = (~maskInt) >>> 0;
+  el.textContent = `${intToIp(maskInt)}  /  ${intToIp(wildInt)}`;
+}
+
+function buildWildcardRefTable() {
+  const tbody = document.getElementById('wc-ref-table');
+  if (!tbody) return;
+  const prefixes = [8,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,32];
+  tbody.innerHTML = prefixes.map((p,i) => {
+    const mask = prefixToMask(p);
+    const wild = (~mask)>>>0;
+    const hosts = p < 31 ? Math.pow(2,32-p)-2 : (p===31?2:1);
+    return `<tr style="border-bottom:1px solid var(--border);background:${i%2===0?'transparent':'rgba(0,0,0,0.1)'}">
+      <td style="padding:5px 10px;color:var(--accent);font-weight:600;">/${p}</td>
+      <td style="padding:5px 10px;color:var(--text);font-family:'JetBrains Mono',monospace;">${intToIp(mask)}</td>
+      <td style="padding:5px 10px;color:var(--warn);font-family:'JetBrains Mono',monospace;">${intToIp(wild)}</td>
+      <td style="padding:5px 10px;color:var(--text-dim);">${hosts.toLocaleString()}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════
+// IP RANGE EXPANDER
+// ══════════════════════════════════════════════
+let _expandedIPs = [];
+
+function expandRange() {
+  const startStr = document.getElementById('ir-start').value.trim();
+  const endStr   = document.getElementById('ir-end').value.trim();
+  const exNet    = document.getElementById('ir-exclude-net').checked;
+  const exBcast  = document.getElementById('ir-exclude-bcast').checked;
+  const resultsEl = document.getElementById('ir-results');
+
+  if (!isValidIp(startStr) || !isValidIp(endStr)) { resultsEl.style.display='none'; return; }
+
+  const startInt = ipToInt(startStr);
+  const endInt   = ipToInt(endStr);
+
+  if (endInt < startInt) { resultsEl.style.display='none'; toast('End IP must be greater than Start IP','error'); return; }
+
+  const total = endInt - startInt + 1;
+  if (total > 65536) { toast('Range too large (max 65536 IPs)', 'error'); resultsEl.style.display='none'; return; }
+
+  _expandedIPs = [];
+  for (let i = startInt; i <= endInt; i++) {
+    if (exNet   && i === startInt) continue;
+    if (exBcast && i === endInt)   continue;
+    _expandedIPs.push(intToIp(i));
+  }
+
+  document.getElementById('ir-count').textContent   = _expandedIPs.length;
+  document.getElementById('ir-summary').textContent = `Range: ${startStr} → ${endStr}  ·  ${total} total addresses  ·  ${_expandedIPs.length} listed`;
+  document.getElementById('ir-output').textContent  = _expandedIPs.join('\n');
+  resultsEl.style.display = 'block';
+}
+
+function copyIpRange() {
+  if (!_expandedIPs.length) { toast('No IPs to copy','error'); return; }
+  const text = _expandedIPs.join('\n');
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text).then(()=>toast(`${_expandedIPs.length} IPs copied!`)).catch(()=>fallbackCopy(text));
+  } else { fallbackCopy(text); }
+}
+
+function downloadIpRange() {
+  if (!_expandedIPs.length) { toast('No IPs to download','error'); return; }
+  triggerDownload(_expandedIPs.join('\n'), 'ip_range.txt');
+}
+
+// ══════════════════════════════════════════════
+// NAT RULE BUILDER
+// ══════════════════════════════════════════════
+function toggleNatFields() {
+  const type = document.getElementById('nat-type').value;
+  document.getElementById('nat-method-field').style.display   = type === 'hide' ? 'block' : 'none';
+}
+
+function generateNATRule() {
+  const g   = id => document.getElementById(id).value.trim();
+  const pkg  = g('nat-pkg')       || 'Standard';
+  const pos  = g('nat-pos');
+  const type = g('nat-type');
+  const oSrc = g('nat-orig-src')  || 'Any';
+  const oDst = g('nat-orig-dst')  || 'Any';
+  const oSvc = g('nat-orig-svc')  || 'Any';
+  const tSrc = g('nat-trans-src') || 'Original';
+  const tDst = g('nat-trans-dst') || 'Original';
+  const tSvc = g('nat-trans-svc') || 'Original';
+  const method = type === 'hide' ? g('nat-method') : 'static';
+  const comments = g('nat-comments') || 'NAT rule';
+
+  let cmd = `mgmt_cli add nat-rule package "${pkg}"`;
+  cmd += ` position ${pos}`;
+  cmd += `\\\n  original-source "${oSrc}"`;
+  cmd += `\\\n  original-destination "${oDst}"`;
+  cmd += `\\\n  original-service "${oSvc}"`;
+  cmd += `\\\n  translated-source "${tSrc}"`;
+  cmd += `\\\n  translated-destination "${tDst}"`;
+  cmd += `\\\n  translated-service "${tSvc}"`;
+  cmd += `\\\n  method "${method}"`;
+  cmd += `\\\n  comments "${comments}"`;
+  cmd += `\\\n  --format json`;
+
+  setOutput('nat-output', cmd, 'nat-linecount');
+}
+
+// ══════════════════════════════════════════════
+// CISCO ACL BUILDER
+// ══════════════════════════════════════════════
+let _aclEntries = [];
+
+function addACLEntry(action) {
+  const id = Date.now();
+  _aclEntries.push({ id, action });
+  renderACLEntries();
+}
+
+function removeACLEntry(id) {
+  _aclEntries = _aclEntries.filter(e => e.id !== id);
+  renderACLEntries();
+}
+
+function renderACLEntries() {
+  const type = document.getElementById('acl-type').value;
+  const isExt = type === 'extended';
+  const container = document.getElementById('acl-entries');
+  document.getElementById('acl-rule-count').textContent = _aclEntries.length;
+
+  container.innerHTML = _aclEntries.map((e, i) => {
+    if (e.action === 'remark') {
+      return `<div class="entry-block" style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+        <span style="font-size:10px;padding:2px 8px;border-radius:2px;background:rgba(0,212,255,0.1);color:var(--accent);border:1px solid rgba(0,212,255,0.3);font-family:'Syne',sans-serif;font-weight:700;min-width:58px;text-align:center;">REMARK</span>
+        <input type="text" class="acl-remark" placeholder="Comment text..." style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:3px;padding:6px 10px;color:var(--text);font-size:12px;" value="${e.text||''}">
+        <button class="btn btn-danger btn-sm" onclick="removeACLEntry(${e.id})">✕</button>
+      </div>`;
+    }
+    const color = e.action === 'permit' ? 'rgba(0,255,136,0.1)' : 'rgba(255,71,87,0.1)';
+    const bcolor = e.action === 'permit' ? 'rgba(0,255,136,0.3)' : 'rgba(255,71,87,0.3)';
+    const tcolor = e.action === 'permit' ? 'var(--accent2)' : 'var(--danger)';
+    return `<div class="entry-block" style="margin-bottom:8px;padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+        <span style="font-size:10px;padding:2px 8px;border-radius:2px;background:${color};color:${tcolor};border:1px solid ${bcolor};font-family:'Syne',sans-serif;font-weight:700;min-width:58px;text-align:center;">${e.action.toUpperCase()}</span>
+        ${isExt ? `<select class="acl-proto" style="background:var(--surface);border:1px solid var(--border);border-radius:3px;padding:4px 8px;color:var(--text);font-size:11px;">
+          <option value="ip">ip</option><option value="tcp">tcp</option><option value="udp">udp</option><option value="icmp">icmp</option><option value="ospf">ospf</option><option value="esp">esp</option><option value="ahp">ahp</option>
+        </select>` : ''}
+        <span style="font-size:10px;color:var(--text-dim);">Rule ${i+1}</span>
+        <button class="btn btn-danger btn-sm" style="margin-left:auto;" onclick="removeACLEntry(${e.id})">✕</button>
+      </div>
+      <div class="form-grid ${isExt ? 'form-grid-2' : ''}">
+        <div class="field"><label>Source IP/Network</label><input type="text" class="acl-src" placeholder="10.0.0.0" value="${e.src||''}"></div>
+        <div class="field"><label>Source Wildcard</label><input type="text" class="acl-src-wc" placeholder="0.0.0.255 or 'host' or 'any'" value="${e.srcwc||'any'}"></div>
+        ${isExt ? `<div class="field"><label>Destination IP/Network</label><input type="text" class="acl-dst" placeholder="192.168.1.0" value="${e.dst||''}"></div>
+        <div class="field"><label>Dest Wildcard / Port</label><input type="text" class="acl-dst-wc" placeholder="0.0.0.255 or 'eq 443'" value="${e.dstwc||'any'}"></div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function generateACL() {
+  const name = document.getElementById('acl-name').value.trim() || 'ACL_LIST';
+  const type = document.getElementById('acl-type').value;
+  const dir  = document.getElementById('acl-dir').value.trim();
+  const isExt = type === 'extended';
+
+  const blocks = document.querySelectorAll('#acl-entries .entry-block');
+  let lines = [];
+  lines.push(`ip access-list ${type} ${name}`);
+  if (dir) lines.push(` ! ${dir}`);
+
+  _aclEntries.forEach((e, i) => {
+    const b = blocks[i];
+    if (!b) return;
+    if (e.action === 'remark') {
+      const txt = b.querySelector('.acl-remark').value.trim() || 'Remark';
+      lines.push(` remark ${txt}`);
+      return;
+    }
+    const src   = b.querySelector('.acl-src')?.value.trim()    || 'any';
+    const srcwc = b.querySelector('.acl-src-wc')?.value.trim() || 'any';
+    const proto = b.querySelector('.acl-proto')?.value || 'ip';
+
+    let rule = ` ${e.action}`;
+    if (isExt) rule += ` ${proto}`;
+
+    if (srcwc === 'any' || src === 'any') {
+      rule += ` any`;
+    } else if (srcwc === 'host') {
+      rule += ` host ${src}`;
+    } else {
+      rule += ` ${src} ${srcwc}`;
+    }
+
+    if (isExt) {
+      const dst   = b.querySelector('.acl-dst')?.value.trim()    || 'any';
+      const dstwc = b.querySelector('.acl-dst-wc')?.value.trim() || 'any';
+      if (dstwc === 'any' || dst === 'any') {
+        rule += ` any`;
+      } else if (dstwc === 'host') {
+        rule += ` host ${dst}`;
+      } else if (dstwc.startsWith('eq ') || dstwc.startsWith('gt ') || dstwc.startsWith('lt ') || dstwc.startsWith('range ')) {
+        rule += ` ${dst} any ${dstwc}`;
+      } else {
+        rule += ` ${dst} ${dstwc}`;
+      }
+    }
+    lines.push(rule);
+  });
+
+  lines.push('!');
+  setOutput('acl-output', lines.join('\n'), 'acl-linecount');
+}
+
+function clearACL() {
+  _aclEntries = [];
+  renderACLEntries();
+  document.getElementById('acl-output').textContent = '';
+  document.getElementById('acl-linecount').textContent = '';
+}
+
+// ══════════════════════════════════════════════
+// CISCO HSRP / VRRP
+// ══════════════════════════════════════════════
+function generateFHRP() {
+  const g    = id => document.getElementById(id).value.trim();
+  const proto      = g('fhrp-proto');
+  const iface      = g('fhrp-iface')        || 'GigabitEthernet0/1';
+  const group      = g('fhrp-group')        || '1';
+  const vip        = g('fhrp-vip')          || '10.0.0.1';
+  const ver        = g('fhrp-ver');
+  const auth       = g('fhrp-auth');
+  const activeIp   = g('fhrp-active-ip')    || '10.0.0.2';
+  const activeMask = g('fhrp-active-mask')  || '255.255.255.0';
+  const activePri  = g('fhrp-active-pri')   || '110';
+  const activePre  = g('fhrp-active-preempt');
+  const activeDel  = g('fhrp-active-delay') || '10';
+  const activeHost = g('fhrp-active-host')  || 'RTR-ACTIVE';
+  const stbyIp     = g('fhrp-standby-ip')   || '10.0.0.3';
+  const stbyMask   = g('fhrp-standby-mask') || '255.255.255.0';
+  const stbyPri    = g('fhrp-standby-pri')  || '100';
+  const stbyPre    = g('fhrp-standby-preempt');
+  const stbyDel    = g('fhrp-standby-delay')|| '10';
+  const stbyHost   = g('fhrp-standby-host') || 'RTR-STANDBY';
+
+  const p = proto === 'hsrp' ? 'standby' : 'vrrp';
+  const isVRRP = proto === 'vrrp';
+
+  const buildRouter = (host, ip, mask, pri, preempt, delay, role) => {
+    const lines = [
+      `! ── ${host} (${role}) ──`,
+      `hostname ${host}`,
+      `!`,
+      `interface ${iface}`,
+      ` ip address ${ip} ${mask}`,
+      ` no shutdown`,
+    ];
+    if (!isVRRP) {
+      lines.push(` ${p} version ${ver}`);
+    }
+    lines.push(` ${p} ${group} ip ${vip}`);
+    lines.push(` ${p} ${group} priority ${pri}`);
+    if (preempt === 'yes') {
+      lines.push(` ${p} ${group} preempt delay minimum ${delay}`);
+    }
+    if (auth) {
+      if (isVRRP) {
+        lines.push(` ${p} ${group} authentication ${auth}`);
+      } else {
+        lines.push(` ${p} ${group} authentication md5 key-string ${auth}`);
+      }
+    }
+    if (!isVRRP) {
+      lines.push(` ${p} ${group} timers 3 10`);
+    }
+    lines.push('!');
+    lines.push(`! Verify: show ${p} ${group}`);
+    return lines.join('\n');
+  };
+
+  const out = [
+    `! ═══════════════════════════════════════`,
+    `! ${proto.toUpperCase()} Configuration`,
+    `! VIP: ${vip}  Group: ${group}  Interface: ${iface}`,
+    `! Generated by NetScript Toolkit`,
+    `! ═══════════════════════════════════════`,
+    '',
+    buildRouter(activeHost, activeIp, activeMask, activePri, activePre, activeDel, 'ACTIVE'),
+    '',
+    buildRouter(stbyHost, stbyIp, stbyMask, stbyPri, stbyPre, stbyDel, 'STANDBY'),
+  ].join('\n');
+
+  setOutput('fhrp-output', out, 'fhrp-linecount');
+}
+
+// ══════════════════════════════════════════════
+// CHECKPOINT SIC RESET
+// ══════════════════════════════════════════════
+function generateSICReset() {
+  const g       = id => document.getElementById(id).value.trim();
+  const gwName  = g('sic-gw-name') || 'GW-SITE-01';
+  const gwIp    = g('sic-gw-ip')   || '10.0.0.254';
+  const key     = g('sic-key')     || 'Cpkey1234';
+  const type    = g('sic-type');
+  const doReset  = document.getElementById('sic-op-reset').checked;
+  const doMgmt   = document.getElementById('sic-op-mgmt').checked;
+  const doVerify = document.getElementById('sic-op-verify').checked;
+
+  const lines = [
+    `# ═══════════════════════════════════════════`,
+    `# Checkpoint SIC Reset — ${gwName} (${gwIp})`,
+    `# ═══════════════════════════════════════════`,
+    '',
+  ];
+
+  if (doReset) {
+    lines.push(`# ── STEP 1: Reset SIC on Gateway (run via Expert CLI / SSH on ${gwName}) ──`);
+    if (type === 'gateway') {
+      lines.push(`cpconfig`);
+      lines.push(`# Select option: Secure Internal Communication`);
+      lines.push(`# Then select: Reset`);
+      lines.push(`# Enter new activation key: ${key}`);
+      lines.push('');
+      lines.push(`# OR use one-liner (R80.20+):`);
+      lines.push(`cpconfig --sic-key "${key}"`);
+    } else if (type === 'mgmt') {
+      lines.push(`cpconfig`);
+      lines.push(`# Select: Secure Internal Communication → Reset`);
+      lines.push(`# Enter key: ${key}`);
+      lines.push(`# Restart services after: cpstop && cpstart`);
+    } else {
+      lines.push(`mdsconfig`);
+      lines.push(`# Select: Secure Internal Communication → Reset`);
+      lines.push(`# Enter key: ${key}`);
+    }
+    lines.push('');
+  }
+
+  if (doMgmt) {
+    lines.push(`# ── STEP 2: Re-initialise SIC from SmartConsole / Management (mgmt_cli) ──`);
+    lines.push(`mgmt_cli set simple-gateway \\`);
+    lines.push(`  name "${gwName}" \\`);
+    lines.push(`  one-time-password "${key}" \\`);
+    lines.push(`  --format json`);
+    lines.push('');
+    lines.push(`# Publish after:`);
+    lines.push(`mgmt_cli publish --format json`);
+    lines.push('');
+  }
+
+  if (doVerify) {
+    lines.push(`# ── STEP 3: Verify SIC Status ──`);
+    lines.push(`# On Gateway (Expert CLI):`);
+    lines.push(`cpstat mg`);
+    lines.push(`# OR:`);
+    lines.push(`fw ver -k`);
+    lines.push('');
+    lines.push(`# From Management (mgmt_cli):`);
+    lines.push(`mgmt_cli show simple-gateway name "${gwName}" --format json | grep -i sic`);
+  }
+
+  setOutput('sic-output', lines.join('\n'), 'sic-linecount');
+}
+
+// ══════════════════════════════════════════════
+// CHANGE REQUEST TEMPLATE
+// ══════════════════════════════════════════════
+let _crSteps = [];
+
+function addCRStep() {
+  _crSteps.push({ id: Date.now(), text: '' });
+  renderCRSteps();
+}
+
+function removeCRStep(id) {
+  _crSteps = _crSteps.filter(s => s.id !== id);
+  renderCRSteps();
+}
+
+function renderCRSteps() {
+  const container = document.getElementById('cr-steps-list');
+  if (!_crSteps.length) {
+    container.innerHTML = `<div style="color:var(--text-dim);font-size:12px;padding:8px 0;">No steps added — click + Add Step below.</div>`;
+    return;
+  }
+  container.innerHTML = _crSteps.map((s, i) => `
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+      <span style="font-size:10px;color:var(--accent);font-family:'Syne',sans-serif;font-weight:700;min-width:24px;">${i+1}.</span>
+      <input type="text" class="cr-step-input" placeholder="Step description..." style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:3px;padding:6px 10px;color:var(--text);font-size:12px;" value="${s.text}">
+      <button class="btn btn-danger btn-sm" onclick="removeCRStep(${s.id})">✕</button>
+    </div>`).join('');
+}
+
+function generateCR() {
+  const g = id => (document.getElementById(id)?.value || '').trim();
+
+  const steps = [...document.querySelectorAll('.cr-step-input')].map((el, i) => `  ${i+1}. ${el.value.trim() || '(not specified)'}`).join('\n');
+
+  const divider = '═'.repeat(60);
+  const line    = '─'.repeat(60);
+
+  const out = [
+    divider,
+    `  NETWORK CHANGE REQUEST`,
+    divider,
+    ``,
+    `  CR Number   : ${g('cr-num')        || 'N/A'}`,
+    `  Title       : ${g('cr-title')      || 'N/A'}`,
+    `  Type        : ${g('cr-type')}`,
+    `  Risk Level  : ${g('cr-risk')}`,
+    ``,
+    line,
+    `  PEOPLE`,
+    line,
+    `  Requestor   : ${g('cr-requestor')  || 'N/A'}`,
+    `  Implementor : ${g('cr-impl')       || 'N/A'}`,
+    ``,
+    line,
+    `  SCHEDULE`,
+    line,
+    `  Start       : ${g('cr-start')      || 'N/A'}`,
+    `  End         : ${g('cr-end')        || 'N/A'}`,
+    ``,
+    line,
+    `  SCOPE`,
+    line,
+    `  Devices     : ${g('cr-devices')    || 'N/A'}`,
+    ``,
+    `  Business Impact:`,
+    `  ${g('cr-impact') || 'N/A'}`,
+    ``,
+    line,
+    `  CHANGE DESCRIPTION`,
+    line,
+    `  ${g('cr-desc') || 'N/A'}`,
+    ``,
+    line,
+    `  IMPLEMENTATION STEPS`,
+    line,
+    steps || '  (no steps defined)',
+    ``,
+    line,
+    `  ROLLBACK PLAN`,
+    line,
+    `  ${g('cr-rollback') || 'N/A'}`,
+    ``,
+    line,
+    `  TESTING & VALIDATION`,
+    line,
+    `  ${g('cr-test') || 'N/A'}`,
+    ``,
+    divider,
+    `  Approver Signature: ________________________  Date: __________`,
+    divider,
+  ].join('\n');
+
+  setOutput('cr-output', out, 'cr-linecount');
+}
+
+function clearCR() {
+  ['cr-num','cr-title','cr-requestor','cr-impl','cr-start','cr-end',
+   'cr-devices','cr-impact','cr-desc','cr-rollback','cr-test'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  _crSteps = [];
+  renderCRSteps();
+  document.getElementById('cr-output').textContent = '';
+  document.getElementById('cr-linecount').textContent = '';
+}
+
+function downloadCR() {
+  const text = document.getElementById('cr-output').textContent;
+  if (!text) { toast('Generate the CR first', 'error'); return; }
+  const num = document.getElementById('cr-num').value.trim() || 'change_request';
+  triggerDownload(text, `${num}.txt`);
+}
+
+// Init CR steps on load
+document.addEventListener('DOMContentLoaded', () => {
+  renderCRSteps();
+  addCRStep(); addCRStep(); addCRStep();
+});
+</script>
 </body>
 </html>
